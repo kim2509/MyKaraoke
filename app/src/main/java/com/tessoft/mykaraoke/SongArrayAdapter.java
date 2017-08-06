@@ -33,10 +33,21 @@ public class SongArrayAdapter extends ArrayAdapter<JSONObject> {
             }
 
             TextView txtSongTitle = (TextView) row.findViewById(R.id.txtSongTitle);
-            if (item != null && item.get("title") != null)
-                txtSongTitle.setText(item.getString("title"));
-            else
-                txtSongTitle.setText("");
+            TextView txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
+
+            if ( item != null )
+            {
+                if (item.get("title") != null)
+                    txtSongTitle.setText(item.getString("title"));
+                else
+                    txtSongTitle.setText("");
+
+                if ( item.has("playCount") )
+                    txtPlayCount.setText( String.valueOf( item.getInt("playCount") ) );
+                else
+                    txtPlayCount.setText( "0" );
+            }
+
         } catch (Exception ex) {
 
         }

@@ -9,6 +9,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
@@ -67,20 +69,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             txtSongTitle.addTextChangedListener(new TextWatcher() {
                 public void afterTextChanged(Editable s) {
 
-                    try
-                    {
-                        if ( s.length() == 0 ){
+                    try {
+                        if (s.length() == 0) {
                             adapter.clear();
                             adapter.addAll(songList);
-                        }
-                        else
-                        {
+                        } else {
                             ArrayList<JSONObject> tmp = new ArrayList<JSONObject>();
-                            for ( int i = 0; i < songList.size(); i++ )
-                            {
+                            for (int i = 0; i < songList.size(); i++) {
                                 JSONObject obj = songList.get(i);
                                 String title = obj.getString("title");
-                                if ( title.replaceAll(" ", "").indexOf( s.toString().replaceAll(" ", "") ) >= 0 )
+                                if (title.replaceAll(" ", "").indexOf(s.toString().replaceAll(" ", "")) >= 0)
                                     tmp.add(obj);
                             }
 
@@ -88,9 +86,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             adapter.addAll(tmp);
                         }
                         listRecentSearch.setAdapter(adapter);
-                    }
-                    catch( Exception ex )
-                    {
+                    } catch (Exception ex) {
 
                     }
                 }
@@ -101,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                 }
             });
+
+            registerForContextMenu(listRecentSearch);
         }
         catch(Exception ex )
         {
@@ -169,7 +167,32 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         try
         {
             TextView txtView = (TextView) view.findViewById(R.id.txtSongTitle);
+            TextView txtPlayCount = (TextView) view.findViewById(R.id.txtPlayCount);
             String title = txtView.getText().toString();
+
+            String recentSongs = getMetaInfoString("recentSearchSongsV2");
+
+            int playCount = 0;
+
+            if ( recentSongs.length() > 0 ){
+                JSONArray songs = new JSONArray(recentSongs);
+                JSONObject obj = null;
+
+                for ( int i = 0; i < songs.length(); i++ ){
+                    obj = songs.getJSONObject(i);
+                    if ( title.equals( obj.getString("title")))
+                        break;
+                }
+
+                if ( !obj.has("playCount") )
+                    playCount = 0;
+                else
+                    playCount = obj.getInt("playCount");
+
+                obj.put("playCount", ++playCount);
+                txtPlayCount.setText( String.valueOf( playCount ));
+                setMetaInfo("recentSearchSongsV2", songs.toString());
+            }
 
             goToYoutube(title);
         }
@@ -178,10 +201,31 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+    public void reloadSongs() throws Exception
+    {
+        String recentSongs = getMetaInfoString("recentSearchSongsV2");
+
+        songList.clear();
+
+        if ( recentSongs.length() > 0 ){
+            JSONArray songs = new JSONArray(recentSongs);
+            for ( int i = 0; i < songs.length(); i++ )
+            {
+                songList.add( songs.getJSONObject(i) );
+            }
+        }
+
+        // 어댑터 준비
+
+        adapter.clear();
+        adapter.addAll(songList);
+        adapter.notifyDataSetChanged();
+    }
+
     private void goToYoutube( String title ) throws Exception
     {
-        String encodedTitle = URLEncoder.encode( title, "utf-8");
-        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=" + encodedTitle +"+mr")));
+        String encodedTitle = URLEncoder.encode(title, "utf-8");
+        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=" + encodedTitle + "+mr")));
     }
 
     public String getMetaInfoString( String key )
@@ -196,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     {
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences( this );
         SharedPreferences.Editor editor = settings.edit();
-        editor.putString( key, value );
+        editor.putString(key, value);
         editor.commit();
     }
 
@@ -214,5 +258,28 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
         return false;
+    }
+
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
+    {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        menu.setHeaderTitle("Select The Action");
+        menu.add(0, v.getId(), 0, "수정");//groupId, itemId, order, title
+        menu.add(0, v.getId(), 0, "삭제");
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item){
+        if(item.getTitle()=="수정"){
+            Toast.makeText(getApplicationContext(),"calling code",Toast.LENGTH_LONG).show();
+        }
+        else if(item.getTitle()=="삭제"){
+            Toast.makeText(getApplicationContext(),"sending sms code",Toast.LENGTH_LONG).show();
+        }else{
+            return false;
+        }
+        return true;
     }
 }
