@@ -7,12 +7,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import org.json.JSONObject;
+import java.util.HashMap;
 
 /**
  * Created by Daeyong on 2017-03-31.
  */
-public class SongArrayAdapter extends ArrayAdapter<JSONObject> {
+public class SongArrayAdapter extends ArrayAdapter<HashMap> {
 
     LayoutInflater inflater = null;
 
@@ -26,24 +26,31 @@ public class SongArrayAdapter extends ArrayAdapter<JSONObject> {
         View row = convertView;
 
         try {
-            JSONObject item = getItem(position);
+            HashMap item = getItem(position);
 
             if (row == null) {
                 row = inflater.inflate(R.layout.song_list, parent, false);
             }
 
+            TextView txtItemNo = (TextView) row.findViewById(R.id.txtItemNo);
             TextView txtSongTitle = (TextView) row.findViewById(R.id.txtSongTitle);
+            TextView txtSinger = (TextView) row.findViewById(R.id.txtSinger);
             TextView txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
 
             if ( item != null )
             {
+                if ( item.containsKey("itemNo") && item.get("itemNo") != null )
+                    txtItemNo.setText( Util.getStringFromHash(item, "itemNo"));
+
                 if (item.get("title") != null)
-                    txtSongTitle.setText(item.getString("title"));
+                    txtSongTitle.setText(Util.getStringFromHash(item, "title"));
                 else
                     txtSongTitle.setText("");
 
-                if ( item.has("playCount") )
-                    txtPlayCount.setText( String.valueOf( item.getInt("playCount") ) );
+                txtSinger.setText( Util.getStringFromHash(item, "singer"));
+
+                if ( item.containsKey("playCount") )
+                    txtPlayCount.setText( Util.getStringFromHash( item, "playCount") );
                 else
                     txtPlayCount.setText( "0" );
             }

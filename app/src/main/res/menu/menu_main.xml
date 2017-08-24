@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/goSearch"
+        android:icon="@drawable/ic_search_white"
+        android:title="Setting"
+        app:showAsAction="always"
+        android:orderInCategory="0"/>
+
+    <item
+        android:id="@+id/share"
+        android:icon="@drawable/ic_share_white"
+        android:title="Setting"
+        app:showAsAction="always"
+        android:orderInCategory="0"/>
+
+</menu>
