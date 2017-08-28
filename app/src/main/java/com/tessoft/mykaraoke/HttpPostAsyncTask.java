@@ -49,6 +49,8 @@ public class HttpPostAsyncTask extends AsyncTask<Object, Integer, String> {
             // Prepare a request object
             HttpPost post = new HttpPost( url );
 
+            Log.d("HTTPRequest", "Request url:" + url );
+
             Object json = ( params == null || params.length == 0 || params[0] == null ) ? "" : params[0];
 
             ObjectMapper mapper = new ObjectMapper();
@@ -70,6 +72,9 @@ public class HttpPostAsyncTask extends AsyncTask<Object, Integer, String> {
                 InputStream instream = entity.getContent();
                 result= convertStreamToString(instream);
                 // now you have the string representation of the HTML request
+
+                Log.d("HTTPRequest", "Response String:" + result );
+
                 instream.close();
             }
 

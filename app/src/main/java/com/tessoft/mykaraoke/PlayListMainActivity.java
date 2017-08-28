@@ -5,10 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,20 +28,25 @@ import org.json.JSONArray;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 public class PlayListMainActivity extends BaseActivity implements AdapterView.OnItemClickListener,
-        AdapterView.OnItemLongClickListener, TextWatcher {
+        AdapterView.OnItemLongClickListener {
 
     ListView listRecentSearch = null;
     public static ArrayList<HashMap> songList = new ArrayList<HashMap>();
     SongArrayAdapter adapter = null;
 
-    EditText txtSongTitle = null;
-
     int REQUEST_SHARE_PLAYLIST = 1;
     int REQUEST_LOAD_PLAYLIST_SONG = 2;
+
+    public static int sortMode = 0;
+
+    public static int SORT_ALPHA_ASC = 1;
+    public static int SORT_ALPHA_DESC = 2;
+    public static int SORT_SHUFFLE = 3;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -82,9 +86,6 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             listRecentSearch.setAdapter(adapter);
             listRecentSearch.setOnItemLongClickListener(this);
 
-            // 노래 곡목 검색 기능 초기화
-            initSearchText();
-
             registerForContextMenu(listRecentSearch);
 
             // broadcast 등록
@@ -94,6 +95,12 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             if ( getIntent() != null && getIntent().getExtras().containsKey("playListName") &&
                     !Util.isEmptyString( getIntent().getExtras().get("playListName") ) )
                 setTitle( getIntent().getExtras().getString("playListName"));
+
+            // 노래목록 불러오기
+            loadSongList();
+            adapter.clear();
+            adapter.addAll(songList);
+            adapter.notifyDataSetChanged();
         }
         catch(Exception ex )
         {
@@ -106,21 +113,28 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         try {
             super.onResume();
 
-            if ( bShuffle == false )
-                songList.clear();
+//            if ( bShuffle == false )
+//                songList.clear();
+//
 
-            // 노래목록 불러오기
-            loadSongList();
-            adapter.clear();
-            adapter.addAll(songList);
-            adapter.notifyDataSetChanged();
 
-            /*
             loadPlayListSongs();
-*/
 
         } catch (Exception ex ) {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig)
+    {
+        super.onConfigurationChanged(newConfig);
+
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            findViewById(R.id.optionLayout).setVisibility(ViewGroup.GONE);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            findViewById(R.id.optionLayout).setVisibility(ViewGroup.VISIBLE);
         }
     }
 
@@ -131,13 +145,8 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         registerReceiver(mMessageReceiver, new IntentFilter("CHANGE_PLAY_MODE"));
     }
 
-    private void initSearchText() {
-        txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
-        txtSongTitle.addTextChangedListener( this );
-    }
-
     private void loadSongList() throws Exception {
-        String recentSongs = getMetaInfoString("recentSearchSongsV2");
+        String recentSongs = application.getMetaInfoString("recentSearchSongsV2");
 
         if ( songList.size() > 0 ) return;
 
@@ -167,7 +176,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             for ( int i = 0; i < songList.size(); i++ ) {
                 recentSong.put(songList.get(i));
             }
-            setMetaInfo("recentSearchSongsV2", recentSong.toString() );
+            application.setMetaInfo("recentSearchSongsV2", recentSong.toString());
 
             goToYoutube(edtSongTitle.getText().toString());
             edtSongTitle.setText("");
@@ -193,8 +202,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
             playSong(txtItemNo.getText().toString());
 
-            showToastMessage(title);
-
+            application.showToastMessage(title);
         }
         catch ( Exception ex )
         {
@@ -274,7 +282,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
         //goToYoutube(title);
 
-        Intent intent = new Intent( this, SearchResultActivity.class);
+        Intent intent = new Intent(this, SearchResultActivity.class);
         intent.putExtra("itemNo", itemNo);
         startActivity(intent);
     }
@@ -388,16 +396,15 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
                     try {
                         EditText edtPlayListName = (EditText) dialog.findViewById(R.id.edtPlayListName);
 
-                        if ("기본".equals( edtPlayListName.getText().toString() ))
-                        {
+                        if ("기본".equals(edtPlayListName.getText().toString())) {
                             edtPlayListName.setError("다른 이름으로 지정해 주시기 바랍니다.");
                             return;
                         }
 
                         dialog.dismiss();
                         sharePlayList();
-                    } catch ( Exception ex ) {
-                        showToastMessage(ex.getMessage());
+                    } catch (Exception ex) {
+                        application.showToastMessage(ex.getMessage());
                     }
                 }
             });
@@ -415,7 +422,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
         }
         catch(Exception ex ){
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
     }
 
@@ -470,10 +477,10 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
                 else if ( requestCode == REQUEST_LOAD_PLAYLIST_SONG ) {
                     HashMap data = (HashMap) response.getData();
                     if ( data.containsKey("songList") && data.get("songList") != null ) {
-//                        List<HashMap> songList = (List<HashMap>) data.get("songList");
-//                        adapter.clear();
-//                        adapter.addAll(songList);
-//                        adapter.notifyDataSetChanged();
+                        List<HashMap> songList = (List<HashMap>) data.get("songList");
+                        adapter.clear();
+                        adapter.addAll(songList);
+                        adapter.notifyDataSetChanged();
 
 //                        setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString( songList ) );
 //                        showToastMessage(mapper.writeValueAsString(songList));
@@ -488,30 +495,29 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         }
         catch( Exception ex )
         {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
 
 
     }
 
-    public static boolean bShuffle = false;
     public void shuffle( View v )
     {
         try
         {
-            if ( bShuffle == false )
+            if ( sortMode == 0 )
             {
                 Collections.shuffle(songList);
                 Collections.shuffle(songList);
                 Collections.shuffle(songList);
+                sortMode = SORT_SHUFFLE;
             }
             else
             {
                 songList.clear();
                 loadSongList();
+                sortMode = 0;
             }
-
-            bShuffle = !bShuffle;
 
             selectedItemIndex = 0;
             listRecentSearch.smoothScrollToPosition(0);
@@ -522,8 +528,36 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         }
         catch( Exception ex )
         {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
+    }
+
+    public void sort( View v )
+    {
+        Collections.sort(songList, new Comparator<HashMap>() {
+            @Override
+            public int compare(HashMap lhs, HashMap rhs) {
+
+                String titleLeft = Util.getStringFromHash(lhs, "title");
+                String titleRight = Util.getStringFromHash(rhs, "title");
+
+                if (sortMode != SORT_ALPHA_ASC) {
+                    return titleLeft.compareTo(titleRight);
+                } else {
+                    return titleLeft.compareTo(titleRight) * -1;
+                }
+            }
+        });
+
+        if (sortMode != SORT_ALPHA_ASC) {
+            sortMode = SORT_ALPHA_ASC;
+        } else {
+            sortMode = SORT_ALPHA_DESC;
+        }
+
+        adapter.clear();
+        adapter.addAll(songList);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -538,40 +572,6 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         }
         catch( Exception ex )
         {
-        }
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-    }
-
-    @Override
-    public void afterTextChanged(Editable s) {
-        try {
-            if (s.length() == 0) {
-                adapter.clear();
-                adapter.addAll(songList);
-            } else {
-                ArrayList<HashMap> tmp = new ArrayList<HashMap>();
-                for (int i = 0; i < songList.size(); i++) {
-                    HashMap obj = songList.get(i);
-                    String title = Util.getStringFromHash(obj, "title");
-                    if (title.replaceAll(" ", "").indexOf(s.toString().replaceAll(" ", "")) >= 0)
-                        tmp.add(obj);
-                }
-
-                adapter.clear();
-                adapter.addAll(tmp);
-            }
-            listRecentSearch.setAdapter(adapter);
-        } catch (Exception ex) {
-
         }
     }
 }

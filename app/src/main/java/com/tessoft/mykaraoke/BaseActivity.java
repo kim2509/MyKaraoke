@@ -2,13 +2,11 @@ package com.tessoft.mykaraoke;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.preference.PreferenceManager;
+import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +17,14 @@ import java.util.HashMap;
  * Created by Daeyong on 2017-08-22.
  */
 public class BaseActivity extends AppCompatActivity implements TransactionDelegate {
+
+    KaraokeApplication application = null;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        application = (KaraokeApplication) getApplication();
+    }
 
     public void showOKDialog(String message, final Object param) {
         showOKDialog("확인", message, param);
@@ -49,11 +55,10 @@ public class BaseActivity extends AppCompatActivity implements TransactionDelega
     }
 
     public HashMap getUserInfoMap() throws Exception {
-        String userInfoString = getMetaInfoString("userInfo");
+        String userInfoString = application.getMetaInfoString("userInfo");
         if (!Util.isEmptyString(userInfoString)) {
             ObjectMapper mapper = new ObjectMapper();
-            HashMap userInfo = mapper.readValue(userInfoString, new TypeReference<HashMap>() {
-            });
+            HashMap userInfo = mapper.readValue(userInfoString, new TypeReference<HashMap>() {});
             return userInfo;
         }
 
@@ -92,26 +97,5 @@ public class BaseActivity extends AppCompatActivity implements TransactionDelega
         }
 
         return "";
-    }
-
-    public String getMetaInfoString( String key )
-    {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        if ( settings.contains(key) )
-            return settings.getString(key, "");
-        else return "";
-    }
-
-    public void setMetaInfo( String key, String value )
-    {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString( key, value );
-        editor.commit();
-    }
-
-    public void showToastMessage( String message )
-    {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }

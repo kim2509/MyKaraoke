@@ -93,6 +93,18 @@ public class EditItemActivity extends AppCompatActivity {
     }
 
     private HashMap saveItem() throws Exception {
+
+        // 메인 activity 리스트 갱신(메모리)
+        String itemNo = Util.getStringFromHash(item, "itemNo");
+        for ( int i = 0; i < PlayListMainActivity.songList.size(); i++ )
+        {
+            HashMap song = PlayListMainActivity.songList.get(i);
+            if ( Util.getStringFromHash(song, "itemNo").equals( itemNo ) ){
+                PlayListMainActivity.songList.set(i, item );
+            }
+        }
+
+        // storage 에 있는 데이터 갱신
         String recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
         if ( !TextUtils.isEmpty(recentSongsV2) ){
             ObjectMapper mapper = new ObjectMapper();

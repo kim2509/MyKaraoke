@@ -5,7 +5,7 @@ package com.tessoft.mykaraoke;
  */
 public class Constants {
 
-    public static boolean bReal = false;
+    public static boolean bReal = true;
 
     static String devIP = "192.168.0.200:8080";
     public static String FAIL = "9999";

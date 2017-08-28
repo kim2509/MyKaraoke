@@ -24,11 +24,13 @@ public class HomeActivity extends BaseActivity
         implements AdapterView.OnItemClickListener{
 
     ListView myList = null;
+    ListView popularList = null;
     public ArrayList<HashMap> playlistArray = new ArrayList<HashMap>();
-    PlayListAdapter adapter = null;
+    PlayListAdapter myListAdapter = null;
+    PlayListAdapter popularListAdapter = null;
 
     int REQUEST_LOGIN = 1;
-    int REQUEST_MY_PLAYLIST = 2;
+    int REQUEST_MAIN = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,20 +41,23 @@ public class HomeActivity extends BaseActivity
             setContentView(R.layout.activity_home);
 
             myList = (ListView) findViewById(R.id.myList);
+            popularList = (ListView) findViewById(R.id.listPopular);
+            popularList.setOnItemClickListener(this);
             myList.setOnItemClickListener(this);
 
             myList.addHeaderView(getLayoutInflater().inflate(R.layout.list_header_my_playlist, null));
 
             guestLogin();
 
-            adapter = new PlayListAdapter(this, 0);
+            myListAdapter = new PlayListAdapter(this, 0);
+            popularListAdapter = new PlayListAdapter(this, 0);
 
             // 데이터 마이그레이션
             migrateData();
         }
         catch( Exception ex )
         {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
     }
 
@@ -61,10 +66,11 @@ public class HomeActivity extends BaseActivity
         try {
             super.onResume();
 
-            String url = Constants.getServerURL("/playlist/myPlayList.do");
+            String url = Constants.getServerURL("/playlist/mainInfo.do");
             HashMap param = getDefaultHashMap();
-            new HttpPostAsyncTask( this, url, REQUEST_MY_PLAYLIST ).execute(param);
+            new HttpPostAsyncTask( this, url, REQUEST_MAIN ).execute(param);
             findViewById(R.id.layoutProgress).setVisibility(ViewGroup.VISIBLE);
+
 
 //            List<HashMap> playList = new ArrayList();
 //            HashMap item = new HashMap();
@@ -76,7 +82,7 @@ public class HomeActivity extends BaseActivity
 //            adapter.addAll(playList);
 //            myList.setAdapter(adapter);
         } catch ( Exception ex ) {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
     }
 
@@ -92,10 +98,10 @@ public class HomeActivity extends BaseActivity
     {
         try
         {
-            String recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
+            String recentSongsV2 = application.getMetaInfoString("recentSearchSongsV2");
             if (TextUtils.isEmpty(recentSongsV2))
             {
-                String recentSongs = getMetaInfoString("recentSearchSongs");
+                String recentSongs = application.getMetaInfoString("recentSearchSongs");
 
                 if ( !TextUtils.isEmpty( recentSongs ) )
                 {
@@ -108,12 +114,12 @@ public class HomeActivity extends BaseActivity
                         songsV2.put(obj);
                     }
 
-                    setMetaInfo("recentSearchSongsV2", songsV2.toString());
+                    application.setMetaInfo("recentSearchSongsV2", songsV2.toString());
                 }
             }
             else
             {
-                recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
+                recentSongsV2 = application.getMetaInfoString("recentSearchSongsV2");
                 if ( !TextUtils.isEmpty( recentSongsV2 ) ){
                     ObjectMapper mapper = new ObjectMapper();
                     List<HashMap> songs = mapper.readValue(recentSongsV2, new TypeReference<List<HashMap>>(){});
@@ -124,14 +130,14 @@ public class HomeActivity extends BaseActivity
                             song.put("itemNo", i + 1 );
                         }
 
-                        setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString( songs ));
+                        application.setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString(songs));
                     }
                 }
             }
         }
         catch( Exception ex )
         {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
     }
 
@@ -139,6 +145,14 @@ public class HomeActivity extends BaseActivity
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
         if ( parent == myList )
+        {
+            Intent intent = new Intent( this, PlayListMainActivity.class);
+            PlayListViewHolder viewHolder = (PlayListViewHolder) view.getTag();
+            intent.putExtra("playListNo", viewHolder.playListNo );
+            intent.putExtra("playListName", viewHolder.txtName.getText().toString() );
+            startActivity(intent);
+        }
+        else if ( parent == popularList )
         {
             Intent intent = new Intent( this, PlayListMainActivity.class);
             PlayListViewHolder viewHolder = (PlayListViewHolder) view.getTag();
@@ -195,16 +209,24 @@ public class HomeActivity extends BaseActivity
                 if ( requestCode == REQUEST_LOGIN ) {
                     HashMap data = (HashMap) response.getData();
                     data = (HashMap) data.get("tempUser");
-                    setMetaInfo("userInfo", mapper.writeValueAsString(data) );
+                    data.put("tempUserNo","4");
+                    application.setMetaInfo("userInfo", mapper.writeValueAsString(data));
                 }
-                else if ( requestCode == REQUEST_MY_PLAYLIST ){
+                else if ( requestCode == REQUEST_MAIN ){
 
                     HashMap data = (HashMap) response.getData();
-                    List<HashMap> playList = (List<HashMap>) data.get("playList");
 
-                    adapter.clear();
-                    adapter.addAll(playList);
-                    myList.setAdapter(adapter);
+                    List<HashMap> playList = (List<HashMap>) data.get("myPlayList");
+
+                    myListAdapter.clear();
+                    myListAdapter.addAll(playList);
+                    myList.setAdapter(myListAdapter);
+
+                    List<HashMap> popularPlayList = (List<HashMap>) data.get("popularList");
+
+                    popularListAdapter.clear();
+                    popularListAdapter.addAll(popularPlayList);
+                    popularList.setAdapter(popularListAdapter);
                 }
             }
             else
@@ -215,9 +237,19 @@ public class HomeActivity extends BaseActivity
         }
         catch( Exception ex )
         {
-            showToastMessage(ex.getMessage());
+            application.showToastMessage(ex.getMessage());
         }
+    }
 
+    public void showMyList(View v )
+    {
+        myList.setVisibility(ViewGroup.VISIBLE);
+        popularList.setVisibility(ViewGroup.GONE);
+    }
 
+    public void showPopularList(View v)
+    {
+        myList.setVisibility(ViewGroup.GONE);
+        popularList.setVisibility(ViewGroup.VISIBLE);
     }
 }

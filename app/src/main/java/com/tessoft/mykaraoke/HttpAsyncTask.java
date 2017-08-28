@@ -1,6 +1,7 @@
 package com.tessoft.mykaraoke;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -43,6 +44,8 @@ public class HttpAsyncTask extends AsyncTask<Void, Integer, String> {
             // Prepare a request object
             HttpGet httpget = new HttpGet(url);
 
+            Log.d("HTTPRequest", "Request url:" + url);
+
             // Execute the request
             HttpResponse response = httpclient.execute(httpget);
 
@@ -54,6 +57,9 @@ public class HttpAsyncTask extends AsyncTask<Void, Integer, String> {
                 // A Simple JSON Response Read
                 InputStream instream = entity.getContent();
                 result= convertStreamToString(instream);
+
+                Log.d("HTTPRequest", "Response String:" + result );
+
                 // now you have the string representation of the HTML request
                 instream.close();
             }

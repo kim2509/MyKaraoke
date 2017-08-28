@@ -1,28 +1,36 @@
 package com.tessoft.mykaraoke;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
+import android.os.Handler;
+import android.os.Message;
 import android.text.TextUtils;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Daeyong on 2017-08-17.
  */
-public class SearchResultActivity extends AppCompatActivity
-    implements TransactionDelegate{
+public class SearchResultActivity extends BaseActivity
+    implements AdapterView.OnItemClickListener{
 
     String YoutubeApiKey = "AIzaSyD0WWUaXGrcaV7DFAkaf2zyr11-q-iPx4w";
     HashMap item = null;
+    ListView listSearch = null;
+    SearchResultAdater adapter = null;
+    Timer timer = new Timer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +39,10 @@ public class SearchResultActivity extends AppCompatActivity
         try {
 
             setContentView(R.layout.activity_search_result);
+            listSearch = (ListView) findViewById(R.id.listSearch);
+            adapter = new SearchResultAdater(this, 0);
+            listSearch.setAdapter(adapter);
+            listSearch.setOnItemClickListener(this);
 
             if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("itemNo"))
             {
@@ -38,12 +50,16 @@ public class SearchResultActivity extends AppCompatActivity
                 loadItem(itemNo);
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
-                title += " " + singer + " " + getMetaInfoString("example_text");
+                title += " " + singer + " " + application.getMetaInfoString("example_text");
 
-                title = URLEncoder.encode( title );
-                String url = "https://www.googleapis.com/youtube/v3/search?part=id,snippet&q=" + title +
-                        "&type=video&key=" + YoutubeApiKey;
-                new HttpAsyncTask( this, url, 1 ).execute();
+//                title = URLEncoder.encode( title );
+//                String url = "https://www.googleapis.com/youtube/v3/search?part=id,snippet&q=" + title +
+//                        "&type=video&key=" + YoutubeApiKey;
+
+                String url = Constants.getServerURL("/playlist/searchSong.do");
+                HashMap param = getDefaultHashMap();
+                param.put("title", title );
+                new HttpPostAsyncTask( this, url, 1 ).execute(param);
             }
 
         } catch (Exception ex) {
@@ -52,7 +68,7 @@ public class SearchResultActivity extends AppCompatActivity
     }
 
     private void loadItem( String itemNo ) throws Exception {
-        String recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
+        String recentSongsV2 = application.getMetaInfoString("recentSearchSongsV2");
         if ( !TextUtils.isEmpty(recentSongsV2) ){
             ObjectMapper mapper = new ObjectMapper();
             List<HashMap> songs = mapper.readValue(recentSongsV2, new TypeReference<List<HashMap>>() {
@@ -67,39 +83,43 @@ public class SearchResultActivity extends AppCompatActivity
         }
     }
 
-    public String getMetaInfoString( String key )
-    {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        if ( settings.contains(key) )
-            return settings.getString(key, "");
-        else return "";
-    }
-
     @Override
     public void doPostTransaction(int requestCode, Object result) {
 
         try
         {
-            ObjectMapper mapper = new ObjectMapper();
-
-            HashMap param = mapper.readValue(result.toString(), new TypeReference<HashMap>(){});
-
-            List<HashMap> items = (List<HashMap>) param.get("items");
-
-            for ( int i = 0; i < items.size(); i++ )
+            if ( Constants.FAIL.equals(result) )
             {
-                HashMap idObj = (HashMap) items.get(i).get("id");
-                String videoID = idObj.get("videoId").toString();
-
-                Intent intent = new Intent( this, FullscreenPlayerActivity.class);
-                intent.putExtra("videoID", videoID);
-                startActivity(intent);
-                finish();
-
-                break;
+                showOKDialog("통신중 오류가 발생했습니다.\r\n다시 시도해 주십시오.", null);
+                return;
             }
 
+            ObjectMapper mapper = new ObjectMapper();
+            APIResponse response = mapper.readValue(result.toString(), new TypeReference<APIResponse>(){});
 
+            if ( "0000".equals( response.getResCode() ) )
+            {
+                HashMap data = (HashMap) response.getData();
+                List<HashMap> items = (List<HashMap>) data.get("items");
+
+                adapter.clear();
+                adapter.addAll( items );
+                adapter.notifyDataSetChanged();
+
+                if ( items != null && items.size() > 0 ) {
+                    findViewById(R.id.layoutGuide).setVisibility(ViewGroup.VISIBLE);
+
+                    TimerTask updateSecond = new UpdateSecond();
+                    timer.scheduleAtFixedRate(updateSecond, 0, 1000);
+//                    listSearch.setSelection(0);
+//                    listSearch.getSelectedView().setSelected(true);
+                }
+            }
+            else
+            {
+                showOKDialog("경고", response.getResMsg(), null);
+                return;
+            }
         }
         catch( Exception ex )
         {
@@ -108,7 +128,66 @@ public class SearchResultActivity extends AppCompatActivity
             Intent intent = new Intent("PLAY_NEXT_SONG");
             sendBroadcast(intent);
         }
+    }
 
+    public void tick()
+    {
+        TextView txtSecond = (TextView) findViewById(R.id.txtSecond);
+        int second = Integer.parseInt(txtSecond.getText().toString());
 
+        if ( second == 1 ){
+            go(adapter.getItem(0), true);
+        } else {
+            Message msg = new Message();
+            msg.obj = String.valueOf( second -1 );
+            h.sendMessage(msg);
+        }
+    }
+
+    final Handler h = new Handler(new Handler.Callback() {
+
+        @Override
+        public boolean handleMessage(Message msg) {
+
+            TextView txtSecond = (TextView) findViewById(R.id.txtSecond);
+            txtSecond.setText( msg.obj.toString() );
+
+            return false;
+        }
+    });
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        SearchResultViewHolder viewHolder = (SearchResultViewHolder) view.getTag();
+        go( viewHolder.item , true );
+    }
+
+    public void go( HashMap item, boolean bFinish ){
+
+        timer.cancel();
+
+        Intent intent = new Intent( this, FullscreenPlayerActivity.class);
+        intent.putExtra("item", item);
+        startActivity(intent);
+        if ( bFinish )
+            finish();
+    }
+
+    class UpdateSecond extends TimerTask {
+
+        public void run() {
+            tick();
+        }
+    }
+
+    public void cancelTimer( View v ){
+        timer.cancel();
+        findViewById(R.id.layoutGuide).setVisibility(ViewGroup.GONE);
+    }
+
+    @Override
+    public void finish() {
+        super.finish();
+        timer.cancel();
     }
 }

@@ -12,24 +12,42 @@
         <RelativeLayout
             android:id="@+id/layoutList"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:paddingBottom="@dimen/activity_vertical_margin"
-            android:paddingLeft="@dimen/activity_horizontal_margin"
-            android:paddingRight="@dimen/activity_horizontal_margin"
-            android:paddingTop="@dimen/activity_vertical_margin">
+            android:layout_height="match_parent">
 
             <ListView
                 android:id="@+id/myList"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="match_parent"
+                android:layout_above="@+id/toolBar">
             </ListView>
 
             <ListView
                 android:id="@+id/listPopular"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/myList">
+                android:layout_height="match_parent"
+                android:layout_above="@+id/toolBar"
+                android:visibility="gone">
             </ListView>
+
+            <LinearLayout
+                android:id="@+id/toolBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:padding="5dp">
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="My"
+                    android:onClick="showMyList"/>
+
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Popular"
+                    android:onClick="showPopularList"/>
+            </LinearLayout>
 
         </RelativeLayout>
 

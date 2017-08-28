@@ -18,6 +18,8 @@ import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 
+import java.util.HashMap;
+
 /**
  * Created by Daeyong on 2017-08-17.
  */
@@ -90,9 +92,13 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
         this.player = youTubePlayer;
 
-        if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("videoID")){
-            String videoID = getIntent().getExtras().getString("videoID");
-            youTubePlayer.cueVideo(videoID);
+        if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("item")){
+            HashMap item = (HashMap) getIntent().getExtras().get("item");
+            if ( item != null ){
+                HashMap idElement = (HashMap) item.get("id");
+                String videoID = Util.getStringFromHash( idElement, "videoId");
+                youTubePlayer.cueVideo(videoID);
+            }
         }
 
         // Add listeners to YouTubePlayer instance
@@ -122,6 +128,10 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             @Override
             public void onVideoEnded() {
+
+                int offset = player.getCurrentTimeMillis();
+                showToastMessage( String.valueOf( offset ));
+
                 finish();
 
                 Intent intent = new Intent("PLAY_NEXT_SONG");
@@ -131,6 +141,33 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             @Override
             public void onVideoStarted() {
+            }
+        });
+
+        youTubePlayer.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
+            @Override
+            public void onPlaying() {
+
+            }
+
+            @Override
+            public void onPaused() {
+
+            }
+
+            @Override
+            public void onStopped() {
+
+            }
+
+            @Override
+            public void onBuffering(boolean b) {
+
+            }
+
+            @Override
+            public void onSeekTo(int i) {
+
             }
         });
     }
@@ -181,7 +218,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void shuffle(View v )
     {
-        if (PlayListMainActivity.bShuffle )
+        if (PlayListMainActivity.sortMode == PlayListMainActivity.SORT_SHUFFLE )
             showToastMessage("다음곡부터 원래 순서대로 재생됩니다.");
         else
             showToastMessage("다음곡부터 임의대로 재생됩니다.");
