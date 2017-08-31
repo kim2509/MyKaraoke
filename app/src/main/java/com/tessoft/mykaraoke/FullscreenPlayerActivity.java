@@ -3,30 +3,37 @@ package com.tessoft.mykaraoke;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
 
 import java.util.HashMap;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Daeyong on 2017-08-17.
  */
 public class FullscreenPlayerActivity extends YouTubeBaseActivity
-implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListener{
+implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListener, TransactionDelegate{
 
     public static final String API_KEY = "AIzaSyD0WWUaXGrcaV7DFAkaf2zyr11-q-iPx4w";
+    public KaraokeApplication application = null;
+    int REQUEST_UPDATE_PLAYLIST_ITEM = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +46,10 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             YouTubePlayerView youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player_view);
             youTubePlayerView.initialize(API_KEY, this);
 
+            application = (KaraokeApplication) getApplication();
+
         } catch (Exception ex) {
-            showToastMessage( ex.getMessage() );
+            application.showToastMessage(ex.getMessage());
         }
     }
 
@@ -92,8 +101,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
         this.player = youTubePlayer;
 
-        if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("item")){
-            HashMap item = (HashMap) getIntent().getExtras().get("item");
+        if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("songItem")){
+            HashMap item = (HashMap) getIntent().getExtras().get("songItem");
             if ( item != null ){
                 HashMap idElement = (HashMap) item.get("id");
                 String videoID = Util.getStringFromHash( idElement, "videoId");
@@ -109,7 +118,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             @Override
             public void onError(YouTubePlayer.ErrorReason arg0) {
-                showToastMessage(arg0.toString() + " 다음곡을 재생합니다.");
+                application.showToastMessage(arg0.toString() + " 다음곡을 재생합니다.");
 
                 finish();
                 Intent intent = new Intent("PLAY_NEXT_SONG");
@@ -120,6 +129,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             public void onLoaded(String arg0) {
                 youTubePlayer.play();
                 duration = youTubePlayer.getDurationMillis();
+
+                TimerTask updateSecond = new UpdateSecond();
+                timer.scheduleAtFixedRate(updateSecond, 0, 2000);
             }
 
             @Override
@@ -130,10 +142,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             public void onVideoEnded() {
 
                 int offset = player.getCurrentTimeMillis();
-                showToastMessage( String.valueOf( offset ));
 
                 finish();
-
                 Intent intent = new Intent("PLAY_NEXT_SONG");
                 sendBroadcast(intent);
 
@@ -147,41 +157,116 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         youTubePlayer.setPlaybackEventListener(new YouTubePlayer.PlaybackEventListener() {
             @Override
             public void onPlaying() {
-
             }
 
             @Override
             public void onPaused() {
-
             }
 
             @Override
             public void onStopped() {
-
             }
 
             @Override
             public void onBuffering(boolean b) {
-
             }
 
             @Override
             public void onSeekTo(int i) {
-
             }
         });
     }
 
-    @Override
-    public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+    Timer timer = new Timer();
 
-        showToastMessage(youTubeInitializationResult.toString());
+    final Handler h = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
 
+            try {
+
+                if ( msg.what == 1 ) {
+                    Log.d("timer", "" + player.getCurrentTimeMillis());
+                    if ( player.getCurrentTimeMillis() / 1000 > 90 ){
+                        Log.d("timer", "90 seconds played. Causing timer cancel");
+
+                        updateItemVideoID();
+
+                        timer.cancel();
+                    }
+                }
+
+            } catch (Exception ex ){
+                application.showToastMessage(ex);
+            }
+
+        return false;
+        }
+    });
+
+    class UpdateSecond extends TimerTask {
+
+        public void run() {
+            h.sendEmptyMessage(1);
+        }
     }
 
-    public void showToastMessage( String message )
-    {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    public void updateItemVideoID() throws Exception{
+        if ( getIntent() != null && getIntent().getExtras() != null &&
+                getIntent().getExtras().get("songItem") != null && getIntent().getExtras().get("playListItem") != null){
+
+            HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+            HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
+
+            HashMap idElement = (HashMap) songItem.get("id");
+            String videoID = Util.getStringFromHash(idElement, "videoId");
+
+            String url = Constants.getServerURL("/playlist/updateItem.do");
+
+            String tempUserNo = Util.getStringFromHash(application.getDefaultHashMap(), "tempUserNo");
+            playListItem.put("tempUserNo", tempUserNo);
+            playListItem.put("videoID", videoID);
+
+            new HttpPostAsyncTask( this, url, REQUEST_UPDATE_PLAYLIST_ITEM ).execute(playListItem);
+        }
+    }
+
+    @Override
+    public void doPostTransaction(int requestCode, Object result) {
+        try
+        {
+            if ( Constants.FAIL.equals(result) )
+            {
+                Log.e("karaoke", "통신중 오류가 발생");
+                return;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            APIResponse response = mapper.readValue(result.toString(), new TypeReference<APIResponse>(){});
+
+            if ( "0000".equals( response.getResCode() ) )
+            {
+                HashMap data = (HashMap) response.getData();
+
+                if ( requestCode == REQUEST_UPDATE_PLAYLIST_ITEM) {
+
+                }
+            }
+            else
+            {
+                Log.e("karaoke", "http 응답오류 " + response.getResMsg());
+                return;
+            }
+        }
+        catch( Exception ex )
+        {
+            application.showToastMessage(ex);
+        }
+    }
+
+    @Override
+    public void onInitializationFailure(YouTubePlayer.Provider provider, YouTubeInitializationResult youTubeInitializationResult) {
+        application.showToastMessage(youTubeInitializationResult.toString());
     }
 
     public void playPrevious(View v )
@@ -219,9 +304,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public void shuffle(View v )
     {
         if (PlayListMainActivity.sortMode == PlayListMainActivity.SORT_SHUFFLE )
-            showToastMessage("다음곡부터 원래 순서대로 재생됩니다.");
+            application.showToastMessage("다음곡부터 원래 순서대로 재생됩니다.");
         else
-            showToastMessage("다음곡부터 임의대로 재생됩니다.");
+            application.showToastMessage("다음곡부터 임의대로 재생됩니다.");
 
         Intent intent = new Intent("SHUFFLE_SONGS");
         sendBroadcast(intent);
@@ -236,7 +321,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         builder.setItems(items, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 Toast.makeText(getApplicationContext(), items[item] + "모드로 전환합니다.", Toast.LENGTH_SHORT).show();
-                setMetaInfo("example_text", items[item].toString());
+                application.setMetaInfo("example_text", items[item].toString());
 
                 finish();
                 Intent intent = new Intent("CHANGE_PLAY_MODE");
@@ -247,11 +332,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         alert.show();
     }
 
-    public void setMetaInfo( String key, String value )
-    {
-        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putString( key, value );
-        editor.commit();
+    @Override
+    public void finish() {
+        super.finish();
+        timer.cancel();
     }
 }

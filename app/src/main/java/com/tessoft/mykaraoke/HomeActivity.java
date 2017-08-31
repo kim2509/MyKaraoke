@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import adapter.PlayListAdapter;
+import adapter.PlayListViewHolder;
+
 public class HomeActivity extends BaseActivity
         implements AdapterView.OnItemClickListener{
 
@@ -67,7 +70,7 @@ public class HomeActivity extends BaseActivity
             super.onResume();
 
             String url = Constants.getServerURL("/playlist/mainInfo.do");
-            HashMap param = getDefaultHashMap();
+            HashMap param = application.getDefaultHashMap();
             new HttpPostAsyncTask( this, url, REQUEST_MAIN ).execute(param);
             findViewById(R.id.layoutProgress).setVisibility(ViewGroup.VISIBLE);
 
@@ -89,7 +92,7 @@ public class HomeActivity extends BaseActivity
     private void guestLogin() throws Exception
     {
         String url = Constants.getServerURL("/user/guestLogin.do");
-        HashMap param = getDefaultHashMap();
+        HashMap param = application.getDefaultHashMap();
         new HttpPostAsyncTask( this, url, REQUEST_LOGIN ).execute( param );
         findViewById(R.id.marker_progress).setVisibility(ViewGroup.VISIBLE);
     }

@@ -10,6 +10,8 @@ public class Constants {
     static String devIP = "192.168.0.200:8080";
     public static String FAIL = "9999";
 
+    public static String GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE = "do_not_show_basic_play_list_save_guide";
+
     public static String getServerURL( String relativePath )
     {
         if ( bReal )

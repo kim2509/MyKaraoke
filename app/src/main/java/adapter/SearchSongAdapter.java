@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,18 +11,20 @@ import android.widget.TextView;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 
 /**
  * Created by Daeyong on 2017-03-31.
  */
-public class SearchResultAdater extends ArrayAdapter<HashMap> {
+public class SearchSongAdapter extends ArrayAdapter<HashMap> {
 
     LayoutInflater inflater = null;
     DisplayImageOptions options = null;
 
-    public SearchResultAdater(Context context, int textViewResourceId) {
+    public SearchSongAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
         inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -44,10 +46,7 @@ public class SearchResultAdater extends ArrayAdapter<HashMap> {
 
         try {
             HashMap item = getItem(position);
-            HashMap snippet = (HashMap) item.get("snippet");
-            HashMap thumbnails = (HashMap) snippet.get("thumbnails");
-            HashMap medium = (HashMap) thumbnails.get("default");
-            String url = Util.getStringFromHash( medium, "url");
+            String url = Util.getStringFromHash(item, "url");
 
             if (row == null) {
                 row = inflater.inflate(R.layout.search_result_item, parent, false);
@@ -60,9 +59,9 @@ public class SearchResultAdater extends ArrayAdapter<HashMap> {
             }
 
             viewHolder.item = item;
-            viewHolder.txtTitle.setText(Util.getStringFromHash(snippet, "title"));
+            viewHolder.txtTitle.setText(Util.getStringFromHash(item, "title"));
 
-            if ( !Util.isEmptyForKey(medium,"url")) {
+            if ( !Util.isEmptyForKey(item,"url")) {
                 ImageLoader.getInstance().displayImage( url, viewHolder.thumbNailView, options);
             } else {
                 ImageLoader.getInstance().cancelDisplayTask(viewHolder.thumbNailView);

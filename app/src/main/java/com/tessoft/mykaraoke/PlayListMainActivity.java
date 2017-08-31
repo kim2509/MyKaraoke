@@ -32,8 +32,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-public class PlayListMainActivity extends BaseActivity implements AdapterView.OnItemClickListener,
-        AdapterView.OnItemLongClickListener {
+import adapter.SongArrayAdapter;
+import adapter.SongViewHolder;
+
+public class PlayListMainActivity extends BaseActivity implements AdapterView.OnItemClickListener
+{
 
     ListView listRecentSearch = null;
     public static ArrayList<HashMap> songList = new ArrayList<HashMap>();
@@ -84,7 +87,6 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             // 어댑터 준비
             adapter = new SongArrayAdapter(this, 0);
             listRecentSearch.setAdapter(adapter);
-            listRecentSearch.setOnItemLongClickListener(this);
 
             registerForContextMenu(listRecentSearch);
 
@@ -194,18 +196,17 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
         try
         {
-            TextView txtItemNo = (TextView) view.findViewById(R.id.txtItemNo);
-            TextView txtView = (TextView) view.findViewById(R.id.txtSongTitle);
-            String title = txtView.getText().toString();
+            SongViewHolder viewHolder = (SongViewHolder)view.getTag();
 
             selectedItemIndex = position;
 
-            playSong(txtItemNo.getText().toString());
+            playSong( viewHolder.item );
 
-            application.showToastMessage(title);
+            application.showToastMessage(viewHolder.txtSongTitle.getText().toString());
         }
         catch ( Exception ex )
         {
+            application.showToastMessage(ex);
         }
     }
 
@@ -253,7 +254,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 //        }
     }
 
-    private void playSong(String itemNo) {
+    private void playSong(HashMap item) {
     /*
     String recentSongs = getMetaInfoString("recentSearchSongsV2");
 
@@ -283,7 +284,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         //goToYoutube(title);
 
         Intent intent = new Intent(this, SearchResultActivity.class);
-        intent.putExtra("itemNo", itemNo);
+        intent.putExtra("item", item);
         startActivity(intent);
     }
 
@@ -292,23 +293,6 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         String encodedTitle = URLEncoder.encode(title, "utf-8");
         startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/results?search_query=" + encodedTitle + "+mr")));
     }
-
-    @Override
-    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-
-        try {
-
-
-        }
-        catch( Exception ex )
-        {
-
-        }
-
-
-        return false;
-    }
-
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
@@ -355,11 +339,24 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        int id = menuItem.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.goSearch) {
+
+            Intent intent = new Intent(this, SearchActivity.class);
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
+                    !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
+                intent.putExtra("playListNo", getIntent().getExtras().getString("playListNo"));
+
+            startActivity(intent);
+
+            return true;
+        }
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.share) {
@@ -369,7 +366,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(menuItem);
     }
 
     private void showShareDialog() {
@@ -429,7 +426,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
     public void sharePlayList() throws Exception
     {
         String url = Constants.getServerURL("/playlist/addSongs.do");
-        HashMap param = getDefaultHashMap();
+        HashMap param = application.getDefaultHashMap();
 
         if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
                 !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
@@ -443,7 +440,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
     public void loadPlayListSongs() throws Exception
     {
         String url = Constants.getServerURL("/playlist/playList.do");
-        HashMap param = getDefaultHashMap();
+        HashMap param = application.getDefaultHashMap();
 
         if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
                 !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))

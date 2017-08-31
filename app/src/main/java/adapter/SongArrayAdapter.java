@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -6,6 +6,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 
@@ -24,35 +27,36 @@ public class SongArrayAdapter extends ArrayAdapter<HashMap> {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View row = convertView;
+        SongViewHolder viewHolder = null;
 
         try {
             HashMap item = getItem(position);
 
             if (row == null) {
                 row = inflater.inflate(R.layout.song_list, parent, false);
+
+                viewHolder = new SongViewHolder();
+                viewHolder.txtNo = (TextView) row.findViewById(R.id.txtNo);
+                viewHolder.txtSongTitle = (TextView) row.findViewById(R.id.txtSongTitle);
+                viewHolder.txtSinger = (TextView) row.findViewById(R.id.txtSinger);
+                viewHolder.txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
+                row.setTag( viewHolder );
+            } else {
+                viewHolder = (SongViewHolder) row.getTag();
             }
 
-            TextView txtItemNo = (TextView) row.findViewById(R.id.txtItemNo);
-            TextView txtSongTitle = (TextView) row.findViewById(R.id.txtSongTitle);
-            TextView txtSinger = (TextView) row.findViewById(R.id.txtSinger);
-            TextView txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
+            viewHolder.item = item;
 
             if ( item != null )
             {
-                if ( item.containsKey("itemNo") && item.get("itemNo") != null )
-                    txtItemNo.setText( Util.getStringFromHash(item, "itemNo"));
-
-                if (item.get("title") != null)
-                    txtSongTitle.setText(Util.getStringFromHash(item, "title"));
-                else
-                    txtSongTitle.setText("");
-
-                txtSinger.setText( Util.getStringFromHash(item, "singer"));
+                viewHolder.txtNo.setText(String.valueOf(position + 1));
+                viewHolder.txtSongTitle.setText(Util.getStringFromHash(item, "title"));
+                viewHolder.txtSinger.setText( Util.getStringFromHash(item, "singer"));
 
                 if ( item.containsKey("playCount") )
-                    txtPlayCount.setText( Util.getStringFromHash( item, "playCount") );
+                    viewHolder.txtPlayCount.setText( Util.getStringFromHash( item, "playCount") );
                 else
-                    txtPlayCount.setText( "0" );
+                    viewHolder.txtPlayCount.setText( "0" );
             }
 
         } catch (Exception ex) {

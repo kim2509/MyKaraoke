@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import adapter.SearchResultAdater;
+import adapter.SearchResultViewHolder;
+
 /**
  * Created by Daeyong on 2017-08-17.
  */
@@ -44,10 +47,11 @@ public class SearchResultActivity extends BaseActivity
             listSearch.setAdapter(adapter);
             listSearch.setOnItemClickListener(this);
 
-            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("itemNo"))
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("item"))
             {
-                String itemNo = getIntent().getExtras().getString("itemNo");
-                loadItem(itemNo);
+                item = (HashMap) getIntent().getExtras().get("item");
+//                String itemNo = getIntent().getExtras().getString("itemNo");
+//                loadItem(itemNo);
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
                 title += " " + singer + " " + application.getMetaInfoString("example_text");
@@ -57,7 +61,7 @@ public class SearchResultActivity extends BaseActivity
 //                        "&type=video&key=" + YoutubeApiKey;
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");
-                HashMap param = getDefaultHashMap();
+                HashMap param = application.getDefaultHashMap();
                 param.put("title", title );
                 new HttpPostAsyncTask( this, url, 1 ).execute(param);
             }
@@ -167,7 +171,11 @@ public class SearchResultActivity extends BaseActivity
         timer.cancel();
 
         Intent intent = new Intent( this, FullscreenPlayerActivity.class);
-        intent.putExtra("item", item);
+
+        if ( getIntent() != null && getIntent().getExtras().get("item") != null )
+            intent.putExtra("playListItem", (HashMap) getIntent().getExtras().get("item"));
+
+        intent.putExtra("songItem", item);
         startActivity(intent);
         if ( bFinish )
             finish();

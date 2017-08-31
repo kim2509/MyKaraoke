@@ -1,20 +1,46 @@
 package com.tessoft.mykaraoke;
 
+import android.app.Dialog;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 
-public class SearchActivity extends AppCompatActivity
-    implements TextWatcher {
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.HashMap;
+import java.util.List;
+
+import adapter.SearchResultViewHolder;
+import adapter.SearchSongAdapter;
+
+public class SearchActivity extends BaseActivity
+    implements TextWatcher, AdapterView.OnItemClickListener, TextView.OnEditorActionListener{
 
     EditText txtSongTitle = null;
+    int REQUEST_SEARCH_MY_SONG = 1;
+    int REQUEST_ADD_SONG_TO_PLAYLIST = 2;
+    ListView listSearch = null;
+    SearchSongAdapter adapter = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        listSearch = (ListView) findViewById(R.id.listSearch);
+        adapter = new SearchSongAdapter(this, 0);
+        listSearch.setAdapter(adapter);
+        listSearch.setOnItemClickListener(this);
 
         // 노래 곡목 검색 기능 초기화
         initSearchText();
@@ -23,6 +49,7 @@ public class SearchActivity extends AppCompatActivity
     private void initSearchText() {
         txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
         txtSongTitle.addTextChangedListener(this);
+        txtSongTitle.setOnEditorActionListener(this);
     }
 
     @Override
@@ -60,5 +87,186 @@ public class SearchActivity extends AppCompatActivity
 
         }
         */
+
+        try {
+
+            String keyword = s.toString().replaceAll(" ", "");
+            if ( !Util.isEmptyString( keyword ) ) {
+
+                String url = Constants.getServerURL("/playlist/searchMySong.do");
+                HashMap param = application.getDefaultHashMap();
+
+                if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
+                        !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
+                    param.put("playListNo", getIntent().getExtras().getString("playListNo"));
+
+                param.put("keyword", keyword );
+
+                new HttpPostAsyncTask( this, url, REQUEST_SEARCH_MY_SONG ).execute(param);
+
+            }
+            else{
+                adapter.clear();
+                adapter.notifyDataSetChanged();
+            }
+
+        } catch ( Exception ex ) {
+            application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void doPostTransaction(int requestCode, Object result) {
+        try {
+
+            super.doPostTransaction(requestCode, result);
+
+            ObjectMapper mapper = new ObjectMapper();
+            APIResponse response = mapper.readValue(result.toString(), new TypeReference<APIResponse>() {
+            });
+
+            if ( "0000".equals( response.getResCode() ) )
+            {
+                if ( requestCode == REQUEST_SEARCH_MY_SONG ) {
+                    HashMap data = (HashMap) response.getData();
+                    if ( data.containsKey("songList") && data.get("songList") != null ) {
+                        List<HashMap> songList = (List<HashMap>) data.get("songList");
+                        adapter.clear();
+                        adapter.addAll(songList);
+                        adapter.notifyDataSetChanged();
+
+//                        setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString( songList ) );
+//                        showToastMessage(mapper.writeValueAsString(songList));
+                    }
+                }
+                else if ( requestCode == REQUEST_ADD_SONG_TO_PLAYLIST ) {
+                    HashMap data = (HashMap) response.getData();
+                    if ( data.get("song") != null ) {
+                        HashMap item = (HashMap) data.get("song");
+                        Intent intent = new Intent(this, SearchResultActivity.class);
+                        intent.putExtra("item", item);
+                        startActivity(intent);
+                    }
+                }
+            }
+            else
+            {
+                showOKDialog("경고", response.getResMsg(), null);
+                return;
+            }
+
+        } catch( Exception ex ) {
+            application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        try
+        {
+            SearchResultViewHolder viewHolder = (SearchResultViewHolder)view.getTag();
+
+            Intent intent = new Intent(this, SearchResultActivity.class);
+            intent.putExtra("item", viewHolder.item);
+            startActivity(intent);
+
+            application.showToastMessage(viewHolder.txtTitle.getText().toString());
+        }
+        catch ( Exception ex )
+        {
+            application.showToastMessage(ex);
+        }
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+
+        try {
+
+            String title = v.getText().toString();
+
+            if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE )))
+                showGuideDialog(title);
+            else
+                searchSong(title);
+
+        } catch ( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+
+        return false;
+    }
+
+    private void searchSong(String title) throws Exception{
+
+        if (!Util.isEmptyString(title)) {
+
+            String url = Constants.getServerURL("/playlist/addSong.do");
+            HashMap param = application.getDefaultHashMap();
+
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
+                    !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
+                param.put("playListNo", getIntent().getExtras().getString("playListNo"));
+
+            param.put("title", title);
+
+            new HttpPostAsyncTask( this, url, REQUEST_ADD_SONG_TO_PLAYLIST ).execute(param);
+        }
+    }
+
+    public void searchKeyword( View v ) {
+
+        try {
+
+            EditText txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
+
+            String title = txtSongTitle.getText().toString();
+
+            if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE )))
+                showGuideDialog(title);
+            else
+                searchSong(title);
+
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+    }
+
+    public void showGuideDialog(final String title){
+
+        // custom dialog
+        final Dialog dialog = new Dialog( this );
+        dialog.setContentView(R.layout.dialog_playlist_basic_guide);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    CheckBox chkShow = (CheckBox) dialog.findViewById(R.id.chkShow);
+                    if ( chkShow.isChecked() )
+                        application.setMetaInfo( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE, "Y");
+                    dialog.dismiss();
+
+                    searchSong(title);
+
+                } catch (Exception ex) {
+                    application.showToastMessage(ex.getMessage());
+                }
+            }
+        });
+
+        Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
+        // if button is clicked, close the custom dialog
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 }

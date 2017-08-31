@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package adapter;
 
 import android.widget.ImageView;
 import android.widget.TextView;
