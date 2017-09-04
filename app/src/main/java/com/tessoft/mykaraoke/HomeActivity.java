@@ -2,35 +2,29 @@ package com.tessoft.mykaraoke;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
+import com.astuetz.PagerSlidingTabStrip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import adapter.PlayListAdapter;
-import adapter.PlayListViewHolder;
+import adapter.MainPagerAdapter;
 
-public class HomeActivity extends BaseActivity
-        implements AdapterView.OnItemClickListener{
+public class HomeActivity extends BaseActivity{
 
-    ListView myList = null;
-    ListView popularList = null;
-    public ArrayList<HashMap> playlistArray = new ArrayList<HashMap>();
-    PlayListAdapter myListAdapter = null;
-    PlayListAdapter popularListAdapter = null;
+    ViewPager pager = null;
+    MainPagerAdapter pagerAdapter = null;
+    PagerSlidingTabStrip tabs = null;
 
     int REQUEST_LOGIN = 1;
     int REQUEST_MAIN = 2;
@@ -43,17 +37,16 @@ public class HomeActivity extends BaseActivity
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_home);
 
-            myList = (ListView) findViewById(R.id.myList);
-            popularList = (ListView) findViewById(R.id.listPopular);
-            popularList.setOnItemClickListener(this);
-            myList.setOnItemClickListener(this);
+            // Initialize the ViewPager and set an adapter
+            pager = (ViewPager) findViewById(R.id.pagerMain);
+            pagerAdapter = new MainPagerAdapter( getSupportFragmentManager(), application);
+            pager.setAdapter(pagerAdapter);
 
-            myList.addHeaderView(getLayoutInflater().inflate(R.layout.list_header_my_playlist, null));
+            // Bind the tabs to the ViewPager
+            tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+            tabs.setViewPager(pager);
 
             guestLogin();
-
-            myListAdapter = new PlayListAdapter(this, 0);
-            popularListAdapter = new PlayListAdapter(this, 0);
 
             // 데이터 마이그레이션
             migrateData();
@@ -69,31 +62,30 @@ public class HomeActivity extends BaseActivity
         try {
             super.onResume();
 
-            String url = Constants.getServerURL("/playlist/mainInfo.do");
             HashMap param = application.getDefaultHashMap();
-            new HttpPostAsyncTask( this, url, REQUEST_MAIN ).execute(param);
-            findViewById(R.id.layoutProgress).setVisibility(ViewGroup.VISIBLE);
 
+            // 게스트로그인 한 경우만 조회
+            if ( !Util.isEmptyForKey(param, "tempUserNo") ) {
+                loadMainInfo();
+            }
 
-//            List<HashMap> playList = new ArrayList();
-//            HashMap item = new HashMap();
-//            item.put("playListNo","8");
-//            item.put("Name","기본");
-//            playList.add(item);
-
-//            adapter.clear();
-//            adapter.addAll(playList);
-//            myList.setAdapter(adapter);
         } catch ( Exception ex ) {
             application.showToastMessage(ex.getMessage());
         }
+    }
+
+    private void loadMainInfo() throws Exception{
+        String url = Constants.getServerURL("/playlist/mainInfo.do");
+        HashMap param = application.getDefaultHashMap();
+        new HttpPostAsyncTask( this, url, REQUEST_MAIN ).execute(param);
+        findViewById(R.id.layoutProgress).setVisibility(ViewGroup.VISIBLE);
     }
 
     private void guestLogin() throws Exception
     {
         String url = Constants.getServerURL("/user/guestLogin.do");
         HashMap param = application.getDefaultHashMap();
-        new HttpPostAsyncTask( this, url, REQUEST_LOGIN ).execute( param );
+        new HttpPostAsyncTask( this, url, REQUEST_LOGIN ).execute(param);
         findViewById(R.id.marker_progress).setVisibility(ViewGroup.VISIBLE);
     }
 
@@ -145,27 +137,6 @@ public class HomeActivity extends BaseActivity
     }
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-        if ( parent == myList )
-        {
-            Intent intent = new Intent( this, PlayListMainActivity.class);
-            PlayListViewHolder viewHolder = (PlayListViewHolder) view.getTag();
-            intent.putExtra("playListNo", viewHolder.playListNo );
-            intent.putExtra("playListName", viewHolder.txtName.getText().toString() );
-            startActivity(intent);
-        }
-        else if ( parent == popularList )
-        {
-            Intent intent = new Intent( this, PlayListMainActivity.class);
-            PlayListViewHolder viewHolder = (PlayListViewHolder) view.getTag();
-            intent.putExtra("playListNo", viewHolder.playListNo );
-            intent.putExtra("playListName", viewHolder.txtName.getText().toString() );
-            startActivity(intent);
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_home, menu);
@@ -212,24 +183,19 @@ public class HomeActivity extends BaseActivity
                 if ( requestCode == REQUEST_LOGIN ) {
                     HashMap data = (HashMap) response.getData();
                     data = (HashMap) data.get("tempUser");
-                    data.put("tempUserNo","4");
-                    application.setMetaInfo("userInfo", mapper.writeValueAsString(data));
+
+                    if ( Util.isEmptyForKey( application.getDefaultHashMap(), "tempUserNo") ) {
+
+                        application.setMetaInfo("userInfo", mapper.writeValueAsString(data));
+
+                        Intent intent = new Intent(Constants.BROADCAST_LOAD_MY_PLAYLIST);
+                        sendBroadcast(intent);
+                    }
                 }
                 else if ( requestCode == REQUEST_MAIN ){
 
-                    HashMap data = (HashMap) response.getData();
+//                    HashMap data = (HashMap) response.getData();
 
-                    List<HashMap> playList = (List<HashMap>) data.get("myPlayList");
-
-                    myListAdapter.clear();
-                    myListAdapter.addAll(playList);
-                    myList.setAdapter(myListAdapter);
-
-                    List<HashMap> popularPlayList = (List<HashMap>) data.get("popularList");
-
-                    popularListAdapter.clear();
-                    popularListAdapter.addAll(popularPlayList);
-                    popularList.setAdapter(popularListAdapter);
                 }
             }
             else
@@ -242,17 +208,5 @@ public class HomeActivity extends BaseActivity
         {
             application.showToastMessage(ex.getMessage());
         }
-    }
-
-    public void showMyList(View v )
-    {
-        myList.setVisibility(ViewGroup.VISIBLE);
-        popularList.setVisibility(ViewGroup.GONE);
-    }
-
-    public void showPopularList(View v)
-    {
-        myList.setVisibility(ViewGroup.GONE);
-        popularList.setVisibility(ViewGroup.VISIBLE);
     }
 }

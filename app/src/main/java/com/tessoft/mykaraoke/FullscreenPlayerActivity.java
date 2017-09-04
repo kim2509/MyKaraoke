@@ -101,11 +101,24 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
         this.player = youTubePlayer;
 
-        if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("songItem")){
-            HashMap item = (HashMap) getIntent().getExtras().get("songItem");
-            if ( item != null ){
-                HashMap idElement = (HashMap) item.get("id");
-                String videoID = Util.getStringFromHash( idElement, "videoId");
+        if ( getIntent() != null && getIntent().getExtras() != null ) {
+            if ( getIntent().getExtras().get("songItem") != null ) {
+                HashMap item = (HashMap) getIntent().getExtras().get("songItem");
+                if ( item != null ){
+                    HashMap idElement = (HashMap) item.get("id");
+                    String videoID = Util.getStringFromHash( idElement, "videoId");
+                    youTubePlayer.cueVideo(videoID);
+                }
+            }
+            else if ( getIntent().getExtras().get("playListItem") != null ) {
+                HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+                String videoID = "";
+                if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+                    videoID = Util.getStringFromHash(playListItem, "videoID2");
+                } else {
+                    videoID = Util.getStringFromHash(playListItem, "videoID1");
+                }
+
                 youTubePlayer.cueVideo(videoID);
             }
         }
@@ -212,20 +225,31 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     }
 
     public void updateItemVideoID() throws Exception{
-        if ( getIntent() != null && getIntent().getExtras() != null &&
-                getIntent().getExtras().get("songItem") != null && getIntent().getExtras().get("playListItem") != null){
+        if ( getIntent() != null && getIntent().getExtras() != null ) {
 
             HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
-            HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
 
-            HashMap idElement = (HashMap) songItem.get("id");
-            String videoID = Util.getStringFromHash(idElement, "videoId");
+            if ( getIntent().getExtras().get("songItem") != null){
+                HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
+                HashMap idElement = (HashMap) songItem.get("id");
+                String videoID = Util.getStringFromHash(idElement, "videoId");
+
+                if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+                    playListItem.put("videoID2", videoID);
+                } else {
+                    playListItem.put("videoID1", videoID);
+                }
+            }
+
+            if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+                playListItem.put("type", "2");
+            } else {
+                playListItem.put("type", "1");
+            }
 
             String url = Constants.getServerURL("/playlist/updateItem.do");
-
             String tempUserNo = Util.getStringFromHash(application.getDefaultHashMap(), "tempUserNo");
             playListItem.put("tempUserNo", tempUserNo);
-            playListItem.put("videoID", videoID);
 
             new HttpPostAsyncTask( this, url, REQUEST_UPDATE_PLAYLIST_ITEM ).execute(playListItem);
         }
@@ -314,7 +338,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void mode(View v)
     {
-        final CharSequence[] items = {"뮤직비디오", "금영", "태진", "노래방", "음악방송"};
+        final CharSequence[] items = {"뮤직비디오", "금영", "태진", "노래방"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("재생모드를 선택해 주세요.");

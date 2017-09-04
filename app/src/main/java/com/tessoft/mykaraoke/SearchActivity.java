@@ -144,7 +144,7 @@ public class SearchActivity extends BaseActivity
                     if ( data.get("song") != null ) {
                         HashMap item = (HashMap) data.get("song");
                         Intent intent = new Intent(this, SearchResultActivity.class);
-                        intent.putExtra("item", item);
+                        intent.putExtra("playListItem", item);
                         startActivity(intent);
                     }
                 }
@@ -167,7 +167,7 @@ public class SearchActivity extends BaseActivity
             SearchResultViewHolder viewHolder = (SearchResultViewHolder)view.getTag();
 
             Intent intent = new Intent(this, SearchResultActivity.class);
-            intent.putExtra("item", viewHolder.item);
+            intent.putExtra("playListItem", viewHolder.item);
             startActivity(intent);
 
             application.showToastMessage(viewHolder.txtTitle.getText().toString());
@@ -181,6 +181,8 @@ public class SearchActivity extends BaseActivity
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
 
+        /*
+        landscape 모드일 때에 키보드에 조금 치다가 done 을 누르면 바로 검색이 실행돼버림.
         try {
 
             String title = v.getText().toString();
@@ -193,6 +195,7 @@ public class SearchActivity extends BaseActivity
         } catch ( Exception ex ) {
             application.showToastMessage(ex);
         }
+        */
 
         return false;
     }

@@ -8,9 +8,12 @@ public class Constants {
     public static boolean bReal = true;
 
     static String devIP = "192.168.0.200:8080";
+//    static String devIP = "192.168.219.175:8080";
     public static String FAIL = "9999";
 
     public static String GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE = "do_not_show_basic_play_list_save_guide";
+
+    public static String BROADCAST_LOAD_MY_PLAYLIST = "BROADCAST_LOAD_MY_PLAYLIST";
 
     public static String getServerURL( String relativePath )
     {

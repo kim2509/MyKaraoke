@@ -43,6 +43,7 @@ public class PlayListAdapter extends ArrayAdapter<HashMap> {
             else
                 viewHolder = (PlayListViewHolder) row.getTag();
 
+            viewHolder.item = item;
             viewHolder.txtName.setText( Util.getStringFromHash(item, "Name") );
             viewHolder.playListNo = Util.getStringFromHash( item, "playListNo" );
 

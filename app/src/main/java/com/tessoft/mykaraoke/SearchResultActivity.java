@@ -47,18 +47,12 @@ public class SearchResultActivity extends BaseActivity
             listSearch.setAdapter(adapter);
             listSearch.setOnItemClickListener(this);
 
-            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("item"))
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListItem"))
             {
-                item = (HashMap) getIntent().getExtras().get("item");
-//                String itemNo = getIntent().getExtras().getString("itemNo");
-//                loadItem(itemNo);
+                item = (HashMap) getIntent().getExtras().get("playListItem");
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
                 title += " " + singer + " " + application.getMetaInfoString("example_text");
-
-//                title = URLEncoder.encode( title );
-//                String url = "https://www.googleapis.com/youtube/v3/search?part=id,snippet&q=" + title +
-//                        "&type=video&key=" + YoutubeApiKey;
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");
                 HashMap param = application.getDefaultHashMap();
@@ -172,8 +166,8 @@ public class SearchResultActivity extends BaseActivity
 
         Intent intent = new Intent( this, FullscreenPlayerActivity.class);
 
-        if ( getIntent() != null && getIntent().getExtras().get("item") != null )
-            intent.putExtra("playListItem", (HashMap) getIntent().getExtras().get("item"));
+        if ( getIntent() != null && getIntent().getExtras().get("playListItem") != null )
+            intent.putExtra("playListItem", (HashMap) getIntent().getExtras().get("playListItem"));
 
         intent.putExtra("songItem", item);
         startActivity(intent);

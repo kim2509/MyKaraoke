@@ -23,7 +23,7 @@
             android:name=".PlayListMainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="재생목록"
-            android:windowSoftInputMode="stateHidden"></activity>
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".FullscreenPlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -42,7 +42,10 @@
             android:label="@string/title_activity_settings" />
         <activity android:name=".ItemDetailActivity" />
         <activity android:name=".EditItemActivity" />
-        <activity android:name=".SearchActivity"></activity>
+        <activity
+            android:name=".SearchActivity"
+            android:label="검색" />
+        <activity android:name=".EditPlayListActivity"></activity>
     </application>
 
 </manifest>

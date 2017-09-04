@@ -38,6 +38,19 @@
 
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/txtEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical|center_horizontal"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:textSize="18sp"
+            android:textColor="#ff4900"
+            android:textStyle="bold"
+            android:text="저장된 곡이 없습니다.\n\n검색을 통해 곡을 추가하실 수 있습니다."
+            android:visibility="gone"
+            />
     </RelativeLayout>
 
     <RelativeLayout

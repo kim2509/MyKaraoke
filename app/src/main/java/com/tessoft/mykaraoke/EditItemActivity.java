@@ -1,12 +1,8 @@
 package com.tessoft.mykaraoke;
 
-import android.annotation.TargetApi;
-import android.app.ActionBar;
 import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,9 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 
-public class EditItemActivity extends AppCompatActivity {
+public class EditItemActivity extends BaseActivity {
 
     HashMap item = null;
+
+    int REQUEST_SONG_DETAIL = 1;
+    int REQUEST_UPDATE_ITEM = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,14 +29,85 @@ public class EditItemActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_edit_item);
 
-            loadItemInfo();
+//            loadItemInfo();
 
-            actionBarSetup();
+
         }
         catch( Exception ex )
         {
 
         }
+    }
+
+    @Override
+    protected void onResume() {
+        try {
+            super.onResume();
+
+            if ( getIntent() != null && getIntent().getExtras() != null &&
+                    getIntent().getExtras().get("playListItem") != null ) {
+
+                HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+
+                String url = Constants.getServerURL("/playlistItem/detail.do");
+                HashMap param = application.getDefaultHashMap();
+                playListItem.put("tempUserNo", Util.getStringFromHash(param, "tempUserNo"));
+                new HttpPostAsyncTask( this, url, REQUEST_SONG_DETAIL ).execute(playListItem);
+            }
+
+        } catch( Exception ex ) {
+
+        }
+    }
+
+    @Override
+    public void doPostTransaction(int requestCode, Object result) {
+        try
+        {
+            if ( Constants.FAIL.equals(result) )
+            {
+                showOKDialog("통신중 오류가 발생했습니다.\r\n다시 시도해 주십시오.", null);
+                return;
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            APIResponse response = mapper.readValue(result.toString(), new TypeReference<APIResponse>(){});
+
+            if ( "0000".equals( response.getResCode() ) )
+            {
+                if ( requestCode == REQUEST_SONG_DETAIL ) {
+                    HashMap data = (HashMap) response.getData();
+                    if ( data.get("itemInfo") != null ) {
+                        displaySongInfo( (HashMap) data.get("itemInfo") );
+                    }
+                }
+                else if ( requestCode == REQUEST_UPDATE_ITEM ) {
+                    showOKDialog("수정되었습니다", null );
+                }
+            }
+            else
+            {
+                showOKDialog("경고", response.getResMsg(), null);
+                return;
+            }
+        }
+        catch( Exception ex )
+        {
+            application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    public void displaySongInfo( HashMap songInfo ){
+
+        TextView txtItemNo2 = (TextView) findViewById(R.id.txtItemNo2);
+        txtItemNo2.setText( Util.getStringFromHash(songInfo, "itemNo"));
+
+        EditText edtSongTitle = (EditText) findViewById(R.id.edtSongTitle);
+        edtSongTitle.setText( Util.getStringFromHash(songInfo, "title"));
+
+        EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
+        edtSinger.setText( Util.getStringFromHash(songInfo, "singer"));
+
     }
 
     public void loadItemInfo() throws Exception
@@ -61,21 +131,6 @@ public class EditItemActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Sets the Action Bar for new Android versions.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    private void actionBarSetup() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            ActionBar ab = getActionBar();
-            if ( item != null ) {
-                ab.setTitle(Util.getStringFromHash(item, "title"));
-
-                getSupportActionBar().setTitle(Util.getStringFromHash(item, "title"));
-            }
-        }
-    }
-
     private void loadItem( String songNo ) throws Exception {
         String recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
         if ( !TextUtils.isEmpty(recentSongsV2) ){
@@ -94,34 +149,21 @@ public class EditItemActivity extends AppCompatActivity {
 
     private HashMap saveItem() throws Exception {
 
-        // 메인 activity 리스트 갱신(메모리)
-        String itemNo = Util.getStringFromHash(item, "itemNo");
-        for ( int i = 0; i < PlayListMainActivity.songList.size(); i++ )
-        {
-            HashMap song = PlayListMainActivity.songList.get(i);
-            if ( Util.getStringFromHash(song, "itemNo").equals( itemNo ) ){
-                PlayListMainActivity.songList.set(i, item );
-            }
-        }
+        if ( getIntent() != null && getIntent().getExtras() != null &&
+                getIntent().getExtras().get("playListItem") != null ) {
 
-        // storage 에 있는 데이터 갱신
-        String recentSongsV2 = getMetaInfoString("recentSearchSongsV2");
-        if ( !TextUtils.isEmpty(recentSongsV2) ){
-            ObjectMapper mapper = new ObjectMapper();
-            List<HashMap> songs = mapper.readValue(recentSongsV2, new TypeReference<List<HashMap>>() {
-            });
-            if ( songs != null && songs.size() > 0 ) {
-                for ( int i = 0; i < songs.size(); i++ ){
-                    HashMap song = songs.get(i);
-                    if ( Util.getStringFromHash(song, "itemNo").equals(
-                        Util.getStringFromHash(item,"itemNo") ) )
-                    {
-                        songs.set(i, item);
-                    }
-                }
-            }
+            EditText edtSongTitle = (EditText) findViewById(R.id.edtSongTitle);
+            EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
 
-            setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString( songs ));
+            HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+
+            String url = Constants.getServerURL("/playlist/updatePlayListItem.do");
+            HashMap param = application.getDefaultHashMap();
+            playListItem.put("tempUserNo", Util.getStringFromHash(param, "tempUserNo"));
+            playListItem.put("title", edtSongTitle.getText().toString());
+            playListItem.put("singer", edtSinger.getText().toString());
+
+            new HttpPostAsyncTask( this, url, REQUEST_UPDATE_ITEM ).execute(playListItem);
         }
 
         return null;
@@ -161,15 +203,7 @@ public class EditItemActivity extends AppCompatActivity {
             //noinspection SimplifiableIfStatement
             if (id == R.id.save) {
 
-                EditText edtSongTitle = (EditText) findViewById(R.id.edtSongTitle);
-                EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
-
-                item.put("title", edtSongTitle.getText().toString() );
-                item.put("singer", edtSinger.getText().toString() );
-
                 saveItem();
-
-                showToastMessage("저장되었습니다.");
 
                 return true;
             }

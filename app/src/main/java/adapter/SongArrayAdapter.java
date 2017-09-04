@@ -40,6 +40,7 @@ public class SongArrayAdapter extends ArrayAdapter<HashMap> {
                 viewHolder.txtSongTitle = (TextView) row.findViewById(R.id.txtSongTitle);
                 viewHolder.txtSinger = (TextView) row.findViewById(R.id.txtSinger);
                 viewHolder.txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
+                viewHolder.txtPlayCount2 = (TextView) row.findViewById(R.id.txtPlayCount2);
                 row.setTag( viewHolder );
             } else {
                 viewHolder = (SongViewHolder) row.getTag();
@@ -53,10 +54,15 @@ public class SongArrayAdapter extends ArrayAdapter<HashMap> {
                 viewHolder.txtSongTitle.setText(Util.getStringFromHash(item, "title"));
                 viewHolder.txtSinger.setText( Util.getStringFromHash(item, "singer"));
 
-                if ( item.containsKey("playCount") )
-                    viewHolder.txtPlayCount.setText( Util.getStringFromHash( item, "playCount") );
+                if ( item.containsKey("playCount1") )
+                    viewHolder.txtPlayCount.setText( Util.getStringFromHash( item, "playCount1") );
                 else
                     viewHolder.txtPlayCount.setText( "0" );
+
+                if ( item.containsKey("playCount2") )
+                    viewHolder.txtPlayCount2.setText( Util.getStringFromHash( item, "playCount2") );
+                else
+                    viewHolder.txtPlayCount2.setText( "0" );
             }
 
         } catch (Exception ex) {

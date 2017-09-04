@@ -43,4 +43,5 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.7.3'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
     compile files('libs/universal-image-loader-1.9.3.jar')
+    compile 'com.astuetz:pagerslidingtabstrip:1.0.1'
 }

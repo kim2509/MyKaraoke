@@ -12,5 +12,6 @@ public class SongViewHolder {
     public TextView txtSongTitle = null;
     public TextView txtSinger = null;
     public TextView txtPlayCount = null;
+    public TextView txtPlayCount2 = null;
     public HashMap item = null;
 }
