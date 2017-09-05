@@ -204,7 +204,7 @@ public class SearchActivity extends BaseActivity
 
         if (!Util.isEmptyString(title)) {
 
-            String url = Constants.getServerURL("/playlist/addSong.do");
+            String url = Constants.getServerURL("/playlistItem/add.do");
             HashMap param = application.getDefaultHashMap();
 
             if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&

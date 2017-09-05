@@ -10,6 +10,7 @@
     tools:context="com.tessoft.mykaraoke.EditItemActivity">
 
     <RelativeLayout
+        android:id="@+id/layoutInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -64,4 +65,28 @@
             android:hint="가수 이름을 입력하세요."/>
 
     </RelativeLayout>
+
+    <LinearLayout
+        android:layout_below="@+id/layoutInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnChangePlayList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="다른 재생목록으로 이동"
+            android:onClick="changePlayList"/>
+
+        <Button
+            android:id="@+id/btnCopyToPlayList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="다른 재생목록으로 복사"
+            android:onClick="copyToPlayList"/>
+
+    </LinearLayout>
+
 </RelativeLayout>

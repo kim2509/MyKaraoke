@@ -285,7 +285,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
         boolean bExistsVideoID = false;
 
-        if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+        if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
@@ -314,11 +314,20 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo)
     {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        menu.setHeaderTitle("Select The Action");
-        menu.add(0, v.getId(), 0, "상세정보");//groupId, itemId, order, title
-        menu.add(0, v.getId(), 0, "수정");//groupId, itemId, order, title
-        menu.add(0, v.getId(), 0, "삭제");
+        try {
+            String tempUserNo = Util.getStringFromHash( playListItem, "tempUserNo");
+
+            super.onCreateContextMenu(menu, v, menuInfo);
+            menu.setHeaderTitle("Select The Action");
+            menu.add(0, v.getId(), 0, "상세정보");//groupId, itemId, order, title
+
+            if ( tempUserNo.equals( Util.getStringFromHash( application.getDefaultHashMap(), "tempUserNo"))) {
+                menu.add(0, v.getId(), 0, "수정");//groupId, itemId, order, title
+                menu.add(0, v.getId(), 0, "삭제");
+            }
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
     }
 
     @Override

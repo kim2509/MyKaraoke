@@ -34,37 +34,51 @@ public class KaraokeApplication extends Application {
         try {
             super.onCreate();
 
-            DisplayImageOptions options = new DisplayImageOptions.Builder()
-                    .resetViewBeforeLoading(true)
-                    .cacheInMemory(true)
-                    .delayBeforeLoading(100)
-                    .build();
+            // 초기 환경변수 셋팅
+            initializeGlobalPreferences();
 
-            ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
-                    .memoryCacheExtraOptions(100, 100) // default = device screen dimensions
-                    .diskCacheExtraOptions(100, 100, null)
-                    .threadPoolSize(3) // default
-                    .threadPriority(Thread.NORM_PRIORITY - 2) // default
-                    .tasksProcessingOrder(QueueProcessingType.FIFO) // default
-                    .denyCacheImageMultipleSizesInMemory()
-//			.memoryCache(new LruMemoryCache(2 * 1024 * 1024))
-                    .memoryCache(new LimitedAgeMemoryCache(new LruMemoryCache(2 * 1024 * 1024), 60 ))
-                    .memoryCacheSize(2 * 1024 * 1024)
-                    .memoryCacheSizePercentage(13) // default
-                    .diskCacheSize(50 * 1024 * 1024)
-                    .diskCacheFileCount(100)
-                    .diskCacheFileNameGenerator(new HashCodeFileNameGenerator()) // default
-                    .defaultDisplayImageOptions(options) // default
-                    .writeDebugLogs()
-                    .build();
-            ImageLoader.getInstance().init(config);
-
+            // 어드민 환경설정 로딩
             checkIfAdminUser();
+
+            // Universal image loader 초기화
+            initializeUniversalImageLoader();
         }
         catch( Exception ex ){
 
         }
+    }
 
+    private void initializeGlobalPreferences()
+    {
+        if ( Util.isEmptyString( getMetaInfoString("play_mode")))
+            setMetaInfo("play_mode", "뮤직비디오");
+    }
+
+    private void initializeUniversalImageLoader() {
+        DisplayImageOptions options = new DisplayImageOptions.Builder()
+                .resetViewBeforeLoading(true)
+                .cacheInMemory(true)
+                .delayBeforeLoading(100)
+                .build();
+
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(this)
+                .memoryCacheExtraOptions(100, 100) // default = device screen dimensions
+                .diskCacheExtraOptions(100, 100, null)
+                .threadPoolSize(3) // default
+                .threadPriority(Thread.NORM_PRIORITY - 2) // default
+                .tasksProcessingOrder(QueueProcessingType.FIFO) // default
+                .denyCacheImageMultipleSizesInMemory()
+//			.memoryCache(new LruMemoryCache(2 * 1024 * 1024))
+                .memoryCache(new LimitedAgeMemoryCache(new LruMemoryCache(2 * 1024 * 1024), 60 ))
+                .memoryCacheSize(2 * 1024 * 1024)
+                .memoryCacheSizePercentage(13) // default
+                .diskCacheSize(50 * 1024 * 1024)
+                .diskCacheFileCount(100)
+                .diskCacheFileNameGenerator(new HashCodeFileNameGenerator()) // default
+                .defaultDisplayImageOptions(options) // default
+                .writeDebugLogs()
+                .build();
+        ImageLoader.getInstance().init(config);
     }
 
     public void checkIfAdminUser()

@@ -52,7 +52,7 @@ public class SearchResultActivity extends BaseActivity
                 item = (HashMap) getIntent().getExtras().get("playListItem");
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
-                title += " " + singer + " " + application.getMetaInfoString("example_text");
+                title += " " + singer + " " + application.getMetaInfoString("play_mode");
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");
                 HashMap param = application.getDefaultHashMap();

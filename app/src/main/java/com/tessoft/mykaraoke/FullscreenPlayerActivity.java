@@ -113,7 +113,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             else if ( getIntent().getExtras().get("playListItem") != null ) {
                 HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
                 String videoID = "";
-                if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+                if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
                     videoID = Util.getStringFromHash(playListItem, "videoID2");
                 } else {
                     videoID = Util.getStringFromHash(playListItem, "videoID1");
@@ -234,14 +234,14 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 HashMap idElement = (HashMap) songItem.get("id");
                 String videoID = Util.getStringFromHash(idElement, "videoId");
 
-                if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+                if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
                     playListItem.put("videoID2", videoID);
                 } else {
                     playListItem.put("videoID1", videoID);
                 }
             }
 
-            if ("뮤직비디오".equals( application.getMetaInfoString("example_text")) ) {
+            if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
                 playListItem.put("type", "2");
             } else {
                 playListItem.put("type", "1");
@@ -345,7 +345,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         builder.setItems(items, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 Toast.makeText(getApplicationContext(), items[item] + "모드로 전환합니다.", Toast.LENGTH_SHORT).show();
-                application.setMetaInfo("example_text", items[item].toString());
+                application.setMetaInfo("play_mode", items[item].toString());
 
                 finish();
                 Intent intent = new Intent("CHANGE_PLAY_MODE");

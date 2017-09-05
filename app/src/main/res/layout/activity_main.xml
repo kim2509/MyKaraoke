@@ -48,7 +48,7 @@
             android:textSize="18sp"
             android:textColor="#ff4900"
             android:textStyle="bold"
-            android:text="저장된 곡이 없습니다.\n\n검색을 통해 곡을 추가하실 수 있습니다."
+            android:text="저장된 곡이 없습니다.\n\n노래를 검색하시면 자동으로 곡이 추가됩니다."
             android:visibility="gone"
             />
     </RelativeLayout>

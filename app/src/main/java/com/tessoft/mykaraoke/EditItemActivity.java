@@ -1,14 +1,17 @@
 package com.tessoft.mykaraoke;
 
+import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,9 +19,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 
+import adapter.PlayListSpinnerAdapter;
+
 public class EditItemActivity extends BaseActivity {
 
     HashMap item = null;
+    List<HashMap> myPlayList = null;
 
     int REQUEST_SONG_DETAIL = 1;
     int REQUEST_UPDATE_ITEM = 2;
@@ -78,7 +84,11 @@ public class EditItemActivity extends BaseActivity {
                 if ( requestCode == REQUEST_SONG_DETAIL ) {
                     HashMap data = (HashMap) response.getData();
                     if ( data.get("itemInfo") != null ) {
-                        displaySongInfo( (HashMap) data.get("itemInfo") );
+                        item = (HashMap) data.get("itemInfo");
+                        displaySongInfo();
+                    }
+                    if ( data.get("myPlayList") != null ) {
+                        myPlayList = (List<HashMap>) data.get("myPlayList");
                     }
                 }
                 else if ( requestCode == REQUEST_UPDATE_ITEM ) {
@@ -97,16 +107,16 @@ public class EditItemActivity extends BaseActivity {
         }
     }
 
-    public void displaySongInfo( HashMap songInfo ){
+    public void displaySongInfo(){
 
         TextView txtItemNo2 = (TextView) findViewById(R.id.txtItemNo2);
-        txtItemNo2.setText( Util.getStringFromHash(songInfo, "itemNo"));
+        txtItemNo2.setText( Util.getStringFromHash(item, "itemNo"));
 
         EditText edtSongTitle = (EditText) findViewById(R.id.edtSongTitle);
-        edtSongTitle.setText( Util.getStringFromHash(songInfo, "title"));
+        edtSongTitle.setText( Util.getStringFromHash(item, "title"));
 
         EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
-        edtSinger.setText( Util.getStringFromHash(songInfo, "singer"));
+        edtSinger.setText( Util.getStringFromHash(item, "singer"));
 
     }
 
@@ -157,7 +167,7 @@ public class EditItemActivity extends BaseActivity {
 
             HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
 
-            String url = Constants.getServerURL("/playlist/updatePlayListItem.do");
+            String url = Constants.getServerURL("/playlistItem/update.do");
             HashMap param = application.getDefaultHashMap();
             playListItem.put("tempUserNo", Util.getStringFromHash(param, "tempUserNo"));
             playListItem.put("title", edtSongTitle.getText().toString());
@@ -209,14 +219,83 @@ public class EditItemActivity extends BaseActivity {
             }
 
         } catch( Exception ex ) {
-            showToastMessage( ex.getMessage() );
+            application.showToastMessage( ex.getMessage() );
         }
 
         return super.onOptionsItemSelected(menuItem);
     }
 
-    public void showToastMessage( String message )
-    {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    public void copyToPlayList(View v){
+        try {
+            // 복사
+            showPlayListSelectDialog(1);
+        }catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+    }
+
+    public void changePlayList(View v){
+        try {
+            // 이동
+            showPlayListSelectDialog(2);
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+    }
+
+    private void showPlayListSelectDialog(final int mode) {
+        // custom dialog
+        final Dialog dialog = new Dialog( this );
+        dialog.setContentView(R.layout.dialog_change_playlist);
+
+        Spinner spinnerPlayList = (Spinner) dialog.findViewById(R.id.spinnerPlayList);
+        PlayListSpinnerAdapter adapter = new PlayListSpinnerAdapter(this, 0);
+        spinnerPlayList.setAdapter(adapter);
+        if ( myPlayList != null ) {
+            adapter.clear();
+            adapter.addAll(myPlayList);
+            adapter.notifyDataSetChanged();
+        }
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    Spinner spinnerPlayList = (Spinner) dialog.findViewById(R.id.spinnerPlayList);
+                    HashMap item = (HashMap) spinnerPlayList.getSelectedItem();
+                    updatePlayListInfo(item, mode);
+                    dialog.dismiss();
+                } catch (Exception ex) {
+                    application.showToastMessage(ex.getMessage());
+                }
+            }
+        });
+
+        Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
+        // if button is clicked, close the custom dialog
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
+    public void updatePlayListInfo( HashMap playListItem , int mode ) throws Exception{
+
+        String url = Constants.getServerURL("/playlistItem/update.do");
+        HashMap param = application.getDefaultHashMap();
+        param.put("playListNo", Util.getStringFromHash(playListItem, "playListNo"));
+        param.put("mode", String.valueOf(mode));
+        param.put("itemNo", Util.getStringFromHash(item, "itemNo") );
+        param.put("title", Util.getStringFromHash(item,"title") );
+        param.put("singer", Util.getStringFromHash(item,"singer") );
+
+        new HttpPostAsyncTask( this, url, REQUEST_UPDATE_ITEM ).execute(param);
     }
 }
