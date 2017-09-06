@@ -3,9 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/menu_edit"
-        android:icon="@drawable/ic_edit_white"
-        android:title="Edit"
+        android:id="@+id/save"
+        android:icon="@drawable/ic_save"
+        android:title="Save"
         app:showAsAction="always"
         android:orderInCategory="0"/>
 

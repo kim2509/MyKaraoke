@@ -9,4 +9,165 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.tessoft.mykaraoke.ItemDetailActivity">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:id="@+id/layoutInfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/txtItemNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="아이템 번호"
+                android:layout_marginBottom="20dp"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/txtItemNo2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:text="No"
+                android:textSize="18sp"
+                android:layout_alignBaseline="@+id/txtItemNo"/>
+
+            <TextView
+                android:id="@+id/txtSongTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="제목"
+                android:textSize="18sp"
+                android:layout_below="@id/txtItemNo"/>
+
+            <TextView
+                android:id="@+id/txtSongTitle2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignBaseline="@+id/txtSongTitle"
+                android:textSize="18sp"
+                android:text="노래제목"/>
+
+            <TextView
+                android:id="@+id/txtSinger"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="가수"
+                android:textSize="18sp"
+                android:layout_below="@+id/txtSongTitle"
+                android:layout_marginTop="20dp" />
+
+            <TextView
+                android:id="@+id/txtSinger2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignBaseline="@+id/txtSinger"
+                android:textSize="18sp"
+                android:text="홍길동"/>
+
+            <TextView
+                android:id="@+id/txtMVLink1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/txtSinger"
+                android:layout_marginTop="20dp"
+                android:textSize="18sp"
+                android:text="뮤직비디오 링크"/>
+
+            <TextView
+                android:id="@+id/txtMVLink2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignBaseline="@+id/txtMVLink1"
+                android:textSize="18sp"
+                android:text="링크1"/>
+
+            <Button
+                android:id="@+id/btnPlayMVLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/btnResetMVLink"
+                android:layout_below="@+id/txtMVLink2"
+                android:layout_marginTop="10dp"
+                android:text="재생하기"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:id="@+id/btnResetMVLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/txtMVLink2"
+                android:layout_marginTop="10dp"
+                android:text="다시 설정하기"
+                android:visibility="gone"
+                android:onClick="updateMVLinkAsNull"
+                />
+
+            <TextView
+                android:id="@+id/txtKaraokeLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/btnResetMVLink"
+                android:layout_marginTop="20dp"
+                android:textSize="18sp"
+                android:text="노래방 링크"/>
+
+            <TextView
+                android:id="@+id/txtKaraokeLink2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignBaseline="@+id/txtKaraokeLink"
+                android:textSize="18sp"
+                android:text="링크2"/>
+
+            <Button
+                android:id="@+id/btnPlayKaraokeLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toLeftOf="@+id/btnResetKaraokeLink"
+                android:layout_below="@+id/txtKaraokeLink2"
+                android:layout_marginTop="10dp"
+                android:text="재생하기"
+                android:visibility="gone"
+                />
+
+            <Button
+                android:id="@+id/btnResetKaraokeLink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/txtKaraokeLink2"
+                android:layout_marginTop="10dp"
+                android:text="다시 설정하기"
+                android:visibility="gone"
+                android:onClick="updateKaraokeLinkAsNull"
+                />
+
+            <TextView
+                android:id="@+id/txtLinkGuide"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/btnResetKaraokeLink"
+                android:text="영상의 링크는 영상재생후 1분 30초가 지나면 자동으로 설정됩니다."
+                android:layout_marginLeft="30dp"
+                android:layout_marginRight="30dp"
+                android:layout_marginTop="50dp"
+                android:textColor="#ed1673"
+                android:textStyle="bold"
+                />
+
+        </RelativeLayout>
+    </ScrollView>
+
 </RelativeLayout>

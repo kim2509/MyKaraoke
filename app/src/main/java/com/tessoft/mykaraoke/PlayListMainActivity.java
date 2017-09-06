@@ -18,6 +18,8 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -34,7 +36,8 @@ import java.util.List;
 import adapter.SongArrayAdapter;
 import adapter.SongViewHolder;
 
-public class PlayListMainActivity extends BaseActivity implements AdapterView.OnItemClickListener
+public class PlayListMainActivity extends BaseActivity
+        implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener
 {
 
     ListView listRecentSearch = null;
@@ -84,7 +87,6 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
             setContentView(R.layout.activity_main);
 
             listRecentSearch = (ListView) findViewById(R.id.listRecentSearch);
-
             listRecentSearch.setOnItemClickListener(this);
 
             // 어댑터 준비
@@ -98,6 +100,9 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
             // 파라미터 읽어와서 플레이리스트로딩
             loadIntentParameter();
+
+            Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
+            spinnerPlayMode.setOnItemSelectedListener(this);
         }
         catch(Exception ex )
         {
@@ -148,6 +153,15 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
             if ( sortMode == 0 )
                 loadPlayListSongs();
+
+            // 현재 play mode 설정
+            String playMode = application.getMetaInfoString(Constants.PREF_PLAY_MODE);
+            Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
+            for ( int i = 0; i < spinnerPlayMode.getAdapter().getCount(); i++ ) {
+                if ( playMode.equals( spinnerPlayMode.getAdapter().getItem(i) )) {
+                    spinnerPlayMode.setSelection(i);
+                }
+            }
 
         } catch (Exception ex ) {
             application.showToastMessage(ex.getMessage());
@@ -227,7 +241,7 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
 
             selectedItemIndex = position;
 
-            playSong( viewHolder.item );
+            playSong(viewHolder.item);
 
             application.showToastMessage(viewHolder.txtSongTitle.getText().toString());
         }
@@ -501,7 +515,9 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
                             adapter.notifyDataSetChanged();
                             findViewById(R.id.txtEmpty).setVisibility(ViewGroup.GONE);
                             findViewById(R.id.listRecentSearch).setVisibility(ViewGroup.VISIBLE);
-                            findViewById(R.id.optionLayout).setVisibility(ViewGroup.VISIBLE);
+
+                            if ( getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT )
+                                findViewById(R.id.optionLayout).setVisibility(ViewGroup.VISIBLE);
                         } else {
                             findViewById(R.id.txtEmpty).setVisibility(ViewGroup.VISIBLE);
                             findViewById(R.id.listRecentSearch).setVisibility(ViewGroup.GONE);
@@ -583,6 +599,15 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         adapter.notifyDataSetChanged();
     }
 
+    public void playAll( View v ) {
+        listRecentSearch.smoothScrollToPosition(0);
+
+        listRecentSearch.performItemClick(
+                listRecentSearch.getAdapter().getView(0, null, null),
+                0,
+                listRecentSearch.getAdapter().getItemId(0));
+    }
+
     @Override
     protected void onDestroy() {
         // TODO Auto-generated method stub
@@ -622,5 +647,16 @@ public class PlayListMainActivity extends BaseActivity implements AdapterView.On
         } catch( Exception ex ) {
             application.showToastMessage(ex);
         }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        TextView textView = (TextView) view;
+        application.setMetaInfo( Constants.PREF_PLAY_MODE, textView.getText().toString() );
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
     }
 }

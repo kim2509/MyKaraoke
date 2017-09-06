@@ -50,8 +50,8 @@ public class KaraokeApplication extends Application {
 
     private void initializeGlobalPreferences()
     {
-        if ( Util.isEmptyString( getMetaInfoString("play_mode")))
-            setMetaInfo("play_mode", "뮤직비디오");
+        if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )))
+            setMetaInfo( Constants.PREF_PLAY_MODE, "뮤직비디오");
     }
 
     private void initializeUniversalImageLoader() {

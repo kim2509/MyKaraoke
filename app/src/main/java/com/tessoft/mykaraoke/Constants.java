@@ -15,6 +15,8 @@ public class Constants {
 
     public static String BROADCAST_LOAD_MY_PLAYLIST = "BROADCAST_LOAD_MY_PLAYLIST";
 
+    public static String PREF_PLAY_MODE = "play_mode";
+
     public static String getServerURL( String relativePath )
     {
         if ( bReal )

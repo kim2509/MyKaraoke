@@ -356,6 +356,21 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         alert.show();
     }
 
+    public void info( View v ) {
+        try {
+
+            if ( getIntent().getExtras().get("playListItem") != null ) {
+                HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+
+                Intent intent = new Intent( this, ItemDetailActivity.class);
+                intent.putExtra("playListItem", playListItem);
+                startActivity(intent);
+            }
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+    }
+
     @Override
     public void finish() {
         super.finish();
