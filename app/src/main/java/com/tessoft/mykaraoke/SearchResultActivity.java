@@ -170,6 +170,8 @@ public class SearchResultActivity extends BaseActivity
             intent.putExtra("playListItem", (HashMap) getIntent().getExtras().get("playListItem"));
 
         intent.putExtra("songItem", item);
+        intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_RESULT);
+
         startActivity(intent);
         if ( bFinish )
             finish();

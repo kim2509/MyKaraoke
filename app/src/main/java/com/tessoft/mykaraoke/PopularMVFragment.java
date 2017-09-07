@@ -1,6 +1,9 @@
 package com.tessoft.mykaraoke;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +17,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.List;
 
-import adapter.PlayListViewHolder;
-import adapter.SongArrayAdapter;
+import adapter.PopularItemAdapter;
+import adapter.PopularItemViewHolder;
 
 /**
  * Created by Daeyong on 2016-04-18.
@@ -24,9 +27,10 @@ public class PopularMVFragment extends BaseFragment implements AdapterView.OnIte
 
     protected View rootView = null;
     ListView list = null;
-    SongArrayAdapter adapter = null;
+    PopularItemAdapter adapter = null;
 
     int REQUEST_POPULAR_LIST = 1;
+    int selectedItemIndex = 0;
 
     // TODO: Rename and change types and number of parameters
     public static PopularMVFragment newInstance() {
@@ -38,7 +42,23 @@ public class PopularMVFragment extends BaseFragment implements AdapterView.OnIte
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getActivity().registerReceiver(mMessageReceiver, new IntentFilter(Constants.BROADCAST_PLAY_NEXT_MV));
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try
+            {
+                if ( intent.getAction().equals(Constants.BROADCAST_PLAY_NEXT_MV))
+                    playNext();
+            }
+            catch( Exception ex )
+            {
+                application.showToastMessage(ex);
+            }
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -53,7 +73,7 @@ public class PopularMVFragment extends BaseFragment implements AdapterView.OnIte
 
             list = (ListView) rootView.findViewById(R.id.list);
             list.setOnItemClickListener(this);
-            adapter = new SongArrayAdapter(getActivity(), 0);
+            adapter = new PopularItemAdapter(getActivity(), 0);
             list.setAdapter(adapter);
         }
         catch( Exception ex )
@@ -122,15 +142,35 @@ public class PopularMVFragment extends BaseFragment implements AdapterView.OnIte
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Intent intent = new Intent( getActivity(), PlayListMainActivity.class);
-        PlayListViewHolder viewHolder = (PlayListViewHolder) view.getTag();
-        intent.putExtra("playListNo", viewHolder.playListNo );
-        intent.putExtra("playListName", viewHolder.txtName.getText().toString() );
+
+        PopularItemViewHolder viewHolder = (PopularItemViewHolder) view.getTag();
+
+        Intent intent = new Intent( getActivity(), FullscreenPlayerActivity.class);
+
+        intent.putExtra("songItem", viewHolder.item );
+        intent.putExtra("playFrom", Constants.PLAY_FROM_POPULAR_MV_LIST );
+
+        selectedItemIndex = position;
+
         startActivity(intent);
+
+    }
+
+    public void playNext() {
+        if ( selectedItemIndex + 1 < adapter.getCount() ){
+
+            list.smoothScrollToPosition(selectedItemIndex + 1);
+
+            list.performItemClick(
+                    list.getAdapter().getView(selectedItemIndex+1, null, null),
+                    selectedItemIndex + 1,
+                    list.getAdapter().getItemId(selectedItemIndex+1));
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        getActivity().unregisterReceiver(mMessageReceiver);
     }
 }

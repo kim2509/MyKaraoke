@@ -19,12 +19,12 @@ import java.util.HashMap;
 /**
  * Created by Daeyong on 2017-03-31.
  */
-public class SearchResultAdater extends ArrayAdapter<HashMap> {
+public class PopularItemAdapter extends ArrayAdapter<HashMap> {
 
     LayoutInflater inflater = null;
     DisplayImageOptions options = null;
 
-    public SearchResultAdater(Context context, int textViewResourceId) {
+    public PopularItemAdapter(Context context, int textViewResourceId) {
         super(context, textViewResourceId);
         inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -42,23 +42,25 @@ public class SearchResultAdater extends ArrayAdapter<HashMap> {
     public View getView(int position, View convertView, ViewGroup parent) {
 
         View row = convertView;
-        SearchResultViewHolder viewHolder = null;
+        PopularItemViewHolder viewHolder = null;
 
         try {
             HashMap item = getItem(position);
 
             if (row == null) {
-                row = inflater.inflate(R.layout.search_result_item, parent, false);
-                viewHolder = new SearchResultViewHolder();
+                row = inflater.inflate(R.layout.popular_item, parent, false);
+                viewHolder = new PopularItemViewHolder();
                 viewHolder.thumbNailView = (ImageView) row.findViewById(R.id.imgThumbnail);
                 viewHolder.txtTitle = (TextView) row.findViewById(R.id.txtSongTitle);
+                viewHolder.txtPlayCount = (TextView) row.findViewById(R.id.txtPlayCount);
                 row.setTag(viewHolder);
             } else {
-                viewHolder = (SearchResultViewHolder) row.getTag();
+                viewHolder = (PopularItemViewHolder) row.getTag();
             }
 
             viewHolder.item = item;
             viewHolder.txtTitle.setText(Util.getStringFromHash(item, "title"));
+            viewHolder.txtPlayCount.setText("재생횟수:" + Util.getStringFromHash(item, "playCount"));
 
             if ( !Util.isEmptyForKey(item,"thumbnailURL")) {
                 ImageLoader.getInstance().displayImage( Util.getStringFromHash(item, "thumbnailURL"), viewHolder.thumbNailView, options);

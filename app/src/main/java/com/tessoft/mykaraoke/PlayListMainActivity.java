@@ -314,6 +314,7 @@ public class PlayListMainActivity extends BaseActivity
         } else {
             Intent intent = new Intent( this, FullscreenPlayerActivity.class);
             intent.putExtra("playListItem", item);
+            intent.putExtra("playFrom", Constants.PLAY_FROM_PLAYLIST );
             startActivity(intent);
         }
 
@@ -509,7 +510,7 @@ public class PlayListMainActivity extends BaseActivity
                     if ( data.containsKey("songList") && data.get("songList") != null ) {
                         songList = (List<HashMap>) data.get("songList");
 
-                        if ( songList != null && songList.size() > 0 ){
+                        if ( songList != null && songList.size() > 0) {
                             adapter.clear();
                             adapter.addAll(songList);
                             adapter.notifyDataSetChanged();

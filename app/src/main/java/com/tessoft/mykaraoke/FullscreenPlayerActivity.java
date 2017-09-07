@@ -34,6 +34,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public static final String API_KEY = "AIzaSyD0WWUaXGrcaV7DFAkaf2zyr11-q-iPx4w";
     public KaraokeApplication application = null;
     int REQUEST_UPDATE_PLAYLIST_ITEM = 1;
+    public String PLAY_FROM = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             application = (KaraokeApplication) getApplication();
 
+            if ( getIntent().getExtras().containsKey("playFrom") ) {
+                PLAY_FROM = getIntent().getExtras().getString("playFrom");
+            }
         } catch (Exception ex) {
             application.showToastMessage(ex.getMessage());
         }
@@ -105,8 +109,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             if ( getIntent().getExtras().get("songItem") != null ) {
                 HashMap item = (HashMap) getIntent().getExtras().get("songItem");
                 if ( item != null ){
-                    HashMap idElement = (HashMap) item.get("id");
-                    String videoID = Util.getStringFromHash( idElement, "videoId");
+                    String videoID = Util.getStringFromHash( item, "videoID");
                     youTubePlayer.cueVideo(videoID);
                 }
             }
@@ -134,8 +137,11 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 application.showToastMessage(arg0.toString() + " 다음곡을 재생합니다.");
 
                 finish();
-                Intent intent = new Intent("PLAY_NEXT_SONG");
-                sendBroadcast(intent);
+
+                if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) ) {
+                    Intent intent = new Intent("PLAY_NEXT_SONG");
+                    sendBroadcast(intent);
+                }
             }
 
             @Override
@@ -154,12 +160,20 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             @Override
             public void onVideoEnded() {
 
-                int offset = player.getCurrentTimeMillis();
+                if ( Util.isEmptyString(PLAY_FROM)) return;
 
                 finish();
-                Intent intent = new Intent("PLAY_NEXT_SONG");
-                sendBroadcast(intent);
 
+                if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) || Constants.PLAY_FROM_SEARCH_RESULT.equals( PLAY_FROM )){
+                    Intent intent = new Intent("PLAY_NEXT_SONG");
+                    sendBroadcast(intent);
+                } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
+                    Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_MV);
+                    sendBroadcast(intent);
+                } else if ( Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM ) ){
+                    Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_POPULAR_SONG);
+                    sendBroadcast(intent);
+                }
             }
 
             @Override
@@ -225,20 +239,34 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     }
 
     public void updateItemVideoID() throws Exception{
+
+        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) ||
+                Constants.PLAY_FROM_SEARCH_RESULT.equals( PLAY_FROM )){
+            updateVideoID();
+        } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ||
+                Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM )){
+            updatePlayHistory();
+        }
+    }
+
+    public void updateVideoID() throws Exception {
+
         if ( getIntent() != null && getIntent().getExtras() != null ) {
 
             HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
 
             if ( getIntent().getExtras().get("songItem") != null){
                 HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
-                HashMap idElement = (HashMap) songItem.get("id");
-                String videoID = Util.getStringFromHash(idElement, "videoId");
+                String videoID = Util.getStringFromHash(songItem, "videoID");
 
                 if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
                     playListItem.put("videoID2", videoID);
                 } else {
                     playListItem.put("videoID1", videoID);
                 }
+
+                String thumbnailURL = Util.getStringFromHash(songItem, "thumbnailURL");
+                playListItem.put("thumbnailURL", thumbnailURL);
             }
 
             if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
@@ -247,12 +275,29 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 playListItem.put("type", "1");
             }
 
-            String url = Constants.getServerURL("/playlist/updateItem.do");
+            String url = Constants.getServerURL("/playlistItem/updateVideoID.do");
             String tempUserNo = Util.getStringFromHash(application.getDefaultHashMap(), "tempUserNo");
             playListItem.put("tempUserNo", tempUserNo);
 
             new HttpPostAsyncTask( this, url, REQUEST_UPDATE_PLAYLIST_ITEM ).execute(playListItem);
         }
+
+    }
+
+    public void updatePlayHistory() throws Exception {
+
+        if ( getIntent() != null && getIntent().getExtras() != null ||
+                getIntent().getExtras().get("songItem") != null) {
+
+            HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
+
+            String url = Constants.getServerURL("/song/updatePlayHistory.do");
+            String tempUserNo = Util.getStringFromHash(application.getDefaultHashMap(), "tempUserNo");
+            songItem.put("tempUserNo", tempUserNo);
+
+            new HttpPostAsyncTask( this, url, REQUEST_UPDATE_PLAYLIST_ITEM ).execute( songItem);
+        }
+
     }
 
     @Override
@@ -373,7 +418,12 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     @Override
     public void finish() {
+
         super.finish();
+
+        if ( player != null )
+            player.release();
+
         timer.cancel();
     }
 }
