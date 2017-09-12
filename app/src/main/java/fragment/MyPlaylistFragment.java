@@ -28,6 +28,7 @@ import com.tessoft.mykaraoke.R;
 import com.tessoft.mykaraoke.Util;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -167,7 +168,7 @@ public class MyPlaylistFragment extends BaseFragment
                     migrateData( myList );
 
                 } else if ( requestCode == REQUEST_ADD_SONGS ) {
-                    application.setMetaInfo("recentSearchSongs", "");
+                    application.setMetaInfo("recentSearchSongsV2", "");
                 }
             }
             else
@@ -187,7 +188,7 @@ public class MyPlaylistFragment extends BaseFragment
     {
         try
         {
-            String recentSongs = application.getMetaInfoString("recentSearchSongs");
+            String recentSongs = application.getMetaInfoString("recentSearchSongsV2");
 
             if ( !TextUtils.isEmpty( recentSongs ) )
             {
@@ -195,8 +196,9 @@ public class MyPlaylistFragment extends BaseFragment
                 ArrayList songList = new ArrayList();
                 for ( int i = 0; i < songs.length(); i++ )
                 {
+                    JSONObject jsonObj = songs.getJSONObject(i);
                     HashMap obj = new HashMap();
-                    obj.put("title", songs.getString(i));
+                    obj.put("title", jsonObj.getString("title"));
                     songList.add(obj);
                 }
 
