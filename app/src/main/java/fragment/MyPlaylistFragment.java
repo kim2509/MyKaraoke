@@ -168,6 +168,7 @@ public class MyPlaylistFragment extends BaseFragment
                     migrateData( myList );
 
                 } else if ( requestCode == REQUEST_ADD_SONGS ) {
+                    application.setMetaInfo("recentSearchSongs", "");
                     application.setMetaInfo("recentSearchSongsV2", "");
                 }
             }
@@ -188,6 +189,22 @@ public class MyPlaylistFragment extends BaseFragment
     {
         try
         {
+            String recentSongsV1 = application.getMetaInfoString("recentSearchSongs");
+
+            if ( !TextUtils.isEmpty( recentSongsV1 ) )
+            {
+                JSONArray songs = new JSONArray(recentSongsV1);
+                JSONArray songsV2 = new JSONArray();
+                for ( int i = 0; i < songs.length(); i++ )
+                {
+                    JSONObject obj = new JSONObject();
+                    obj.put("title", songs.getString(i));
+                    songsV2.put(obj);
+                }
+
+                application.setMetaInfo("recentSearchSongsV2", songsV2.toString());
+            }
+
             String recentSongs = application.getMetaInfoString("recentSearchSongsV2");
 
             if ( !TextUtils.isEmpty( recentSongs ) )
