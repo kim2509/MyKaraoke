@@ -1,6 +1,7 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -8,8 +9,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -20,6 +24,13 @@ import com.google.android.youtube.player.YouTubeBaseActivity;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerView;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.KaraokeApplication;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.TransactionDelegate;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 import java.util.Timer;
@@ -29,7 +40,7 @@ import java.util.TimerTask;
  * Created by Daeyong on 2017-08-17.
  */
 public class FullscreenPlayerActivity extends YouTubeBaseActivity
-implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListener, TransactionDelegate{
+implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListener, TransactionDelegate {
 
     public static final String API_KEY = "AIzaSyD0WWUaXGrcaV7DFAkaf2zyr11-q-iPx4w";
     public KaraokeApplication application = null;
@@ -43,17 +54,72 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         try {
             setContentView(R.layout.activity_fullscreen_player);
 
-            // Initializing YouTube player view
-            YouTubePlayerView youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player_view);
-            youTubePlayerView.initialize(API_KEY, this);
-
             application = (KaraokeApplication) getApplication();
 
-            if ( getIntent().getExtras().containsKey("playFrom") ) {
-                PLAY_FROM = getIntent().getExtras().getString("playFrom");
+            if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_DATA_WARNING )))
+                showGuideDialog();
+            else {
+                // Initializing YouTube player view
+                YouTubePlayerView youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player_view);
+                youTubePlayerView.initialize(API_KEY, this);
             }
+
+            initializeToolbarButton();
+
         } catch (Exception ex) {
             application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    public void showGuideDialog(){
+
+        // custom dialog
+        final Dialog dialog = new Dialog( this );
+        dialog.setContentView(R.layout.dialog_data_warning_guide);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    CheckBox chkShow = (CheckBox) dialog.findViewById(R.id.chkShow);
+                    if ( chkShow.isChecked() )
+                        application.setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "Y");
+                    dialog.dismiss();
+
+                    // Initializing YouTube player view
+                    YouTubePlayerView youTubePlayerView = (YouTubePlayerView) findViewById(R.id.youtube_player_view);
+                    youTubePlayerView.initialize(API_KEY, FullscreenPlayerActivity.this);
+
+                } catch (Exception ex) {
+                    application.showToastMessage(ex.getMessage());
+                }
+            }
+        });
+
+        dialog.show();
+    }
+
+    private void initializeToolbarButton() {
+        if ( getIntent().getExtras().containsKey("playFrom") ) {
+            PLAY_FROM = getIntent().getExtras().getString("playFrom");
+            if ( PLAY_FROM.equals( Constants.PLAY_FROM_POPULAR_MV_LIST ) ||
+                    PLAY_FROM.equals( Constants.PLAY_FROM_POPULAR_SONG_LIST ) ) {
+                findViewById(R.id.btnChangePlayMode).setVisibility(ViewGroup.GONE);
+                findViewById(R.id.btnShowInfo).setVisibility(ViewGroup.GONE);
+                findViewById(R.id.btnShuffle).setVisibility(ViewGroup.GONE);
+            } else if ( PLAY_FROM.equals( Constants.PLAY_FROM_SEARCH_FRAGMENT ) ||
+                    PLAY_FROM.equals( Constants.PLAY_FROM_SEARCH_RESULT ) ) {
+                if ( !getIntent().getExtras().containsKey("playListItem")) {
+                    findViewById(R.id.btnChangePlayMode).setVisibility(ViewGroup.GONE);
+                    findViewById(R.id.btnShowInfo).setVisibility(ViewGroup.GONE);
+                    findViewById(R.id.btnShuffle).setVisibility(ViewGroup.GONE);
+                    findViewById(R.id.btnPlayNext).setVisibility(ViewGroup.GONE);
+                    findViewById(R.id.btnPlayPrevious).setVisibility(ViewGroup.GONE);
+                }
+            }
         }
     }
 
@@ -78,6 +144,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             params.width = ViewGroup.LayoutParams.WRAP_CONTENT;
             params.height = ViewGroup.LayoutParams.MATCH_PARENT;
             layout.setLayoutParams(params);
+            layout.setGravity(Gravity.CENTER_VERTICAL);
             layout.setOrientation(LinearLayout.VERTICAL);
 
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
@@ -92,6 +159,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             params.width = ViewGroup.LayoutParams.MATCH_PARENT;
             params.height = ViewGroup.LayoutParams.WRAP_CONTENT;
             layout.setLayoutParams(params);
+            layout.setGravity(Gravity.CENTER_HORIZONTAL);
             layout.setOrientation(LinearLayout.HORIZONTAL);
 
         }
@@ -109,14 +177,14 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             if ( getIntent().getExtras().get("songItem") != null ) {
                 HashMap item = (HashMap) getIntent().getExtras().get("songItem");
                 if ( item != null ){
-                    String videoID = Util.getStringFromHash( item, "videoID");
+                    String videoID = Util.getStringFromHash(item, "videoID");
                     youTubePlayer.cueVideo(videoID);
                 }
             }
             else if ( getIntent().getExtras().get("playListItem") != null ) {
                 HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
                 String videoID = "";
-                if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
+                if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     videoID = Util.getStringFromHash(playListItem, "videoID2");
                 } else {
                     videoID = Util.getStringFromHash(playListItem, "videoID1");
@@ -138,10 +206,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
                 finish();
 
-                if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) ) {
-                    Intent intent = new Intent("PLAY_NEXT_SONG");
-                    sendBroadcast(intent);
-                }
+                sendBroadcastForPlayNext();
             }
 
             @Override
@@ -160,20 +225,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             @Override
             public void onVideoEnded() {
 
-                if ( Util.isEmptyString(PLAY_FROM)) return;
-
                 finish();
 
-                if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) || Constants.PLAY_FROM_SEARCH_RESULT.equals( PLAY_FROM )){
-                    Intent intent = new Intent("PLAY_NEXT_SONG");
-                    sendBroadcast(intent);
-                } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
-                    Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_MV);
-                    sendBroadcast(intent);
-                } else if ( Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM ) ){
-                    Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_POPULAR_SONG);
-                    sendBroadcast(intent);
-                }
+                sendBroadcastForPlayNext();
             }
 
             @Override
@@ -204,6 +258,32 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         });
     }
 
+    private void sendBroadcastForPlayNext() {
+        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM )){
+            Intent intent = new Intent("PLAY_NEXT_SONG");
+            sendBroadcast(intent);
+        } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
+            Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_MV);
+            sendBroadcast(intent);
+        } else if ( Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM ) ){
+            Intent intent = new Intent(Constants.BROADCAST_PLAY_NEXT_POPULAR_SONG);
+            sendBroadcast(intent);
+        }
+    }
+
+    private void sendBroadcastForPlayPrevious() {
+        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM )){
+            Intent intent = new Intent("PLAY_PREVIOUS_SONG");
+            sendBroadcast(intent);
+        } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
+            Intent intent = new Intent(Constants.BROADCAST_PLAY_PREVIOUS_MV);
+            sendBroadcast(intent);
+        } else if ( Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM ) ){
+            Intent intent = new Intent(Constants.BROADCAST_PLAY_PREVIOUS_POPULAR_SONG);
+            sendBroadcast(intent);
+        }
+    }
+
     Timer timer = new Timer();
 
     final Handler h = new Handler(new Handler.Callback() {
@@ -212,7 +292,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             try {
 
-                if ( msg.what == 1 ) {
+                if ( msg.what == 1 && player != null) {
                     Log.d("timer", "" + player.getCurrentTimeMillis());
                     if ( player.getCurrentTimeMillis() / 1000 > 90 ){
                         Log.d("timer", "90 seconds played. Causing timer cancel");
@@ -240,12 +320,13 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void updateItemVideoID() throws Exception{
 
-        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM ) ||
-                Constants.PLAY_FROM_SEARCH_RESULT.equals( PLAY_FROM )){
-            updateVideoID();
-        } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ||
-                Constants.PLAY_FROM_POPULAR_SONG_LIST.equals( PLAY_FROM )){
-            updatePlayHistory();
+        if ( getIntent() != null && getIntent().getExtras() != null ) {
+            if ( getIntent().getExtras().containsKey("playListItem")){
+                updateVideoID();
+            }
+            else if ( getIntent().getExtras().containsKey("songItem")) {
+                updatePlayHistory();
+            }
         }
     }
 
@@ -259,7 +340,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
                 String videoID = Util.getStringFromHash(songItem, "videoID");
 
-                if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
+                if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     playListItem.put("videoID2", videoID);
                 } else {
                     playListItem.put("videoID1", videoID);
@@ -269,7 +350,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 playListItem.put("thumbnailURL", thumbnailURL);
             }
 
-            if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
+            if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                 playListItem.put("type", "2");
             } else {
                 playListItem.put("type", "1");
@@ -290,6 +371,12 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 getIntent().getExtras().get("songItem") != null) {
 
             HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
+
+            if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+                songItem.put("type", "2");
+            } else {
+                songItem.put("type", "1");
+            }
 
             String url = Constants.getServerURL("/song/updatePlayHistory.do");
             String tempUserNo = Util.getStringFromHash(application.getDefaultHashMap(), "tempUserNo");
@@ -341,19 +428,19 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public void playPrevious(View v )
     {
         finish();
-        Intent intent = new Intent("PLAY_PREVIOUS_SONG");
-        sendBroadcast(intent);
+        sendBroadcastForPlayPrevious();
     }
 
     public void playNext(View v )
     {
         finish();
-        Intent intent = new Intent("PLAY_NEXT_SONG");
-        sendBroadcast(intent);
+        sendBroadcastForPlayNext();
     }
 
     public void playRew(View v )
     {
+        if ( player == null ) return;
+
         int curSeek = player.getCurrentTimeMillis();
 
         if ( curSeek > 5000 )
@@ -364,6 +451,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void playFF(View v )
     {
+        if ( player == null ) return;
+
         int curSeek = player.getCurrentTimeMillis();
 
         if ( curSeek + 5000 < duration )
@@ -390,7 +479,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
         builder.setItems(items, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int item) {
                 Toast.makeText(getApplicationContext(), items[item] + "모드로 전환합니다.", Toast.LENGTH_SHORT).show();
-                application.setMetaInfo("play_mode", items[item].toString());
+                application.setMetaInfo(Constants.PREF_PLAY_MODE, items[item].toString());
 
                 finish();
                 Intent intent = new Intent("CHANGE_PLAY_MODE");
@@ -421,9 +510,16 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
         super.finish();
 
-        if ( player != null )
-            player.release();
+//        if ( player != null ){
+//            player.release();
+//        }
 
         timer.cancel();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        player = null;
     }
 }

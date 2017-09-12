@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.app.Dialog;
 import android.content.Intent;
@@ -7,6 +7,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -16,6 +17,11 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,53 +71,47 @@ public class SearchActivity extends BaseActivity
     @Override
     public void afterTextChanged(Editable s) {
 
-        /*
-        try {
-            if (s.length() == 0) {
-                adapter.clear();
-                adapter.addAll(songList);
-            } else {
-                ArrayList<HashMap> tmp = new ArrayList<HashMap>();
-                for (int i = 0; i < songList.size(); i++) {
-                    HashMap obj = songList.get(i);
-                    String title = Util.getStringFromHash(obj, "title");
-                    if (title.replaceAll(" ", "").indexOf(s.toString().replaceAll(" ", "")) >= 0)
-                        tmp.add(obj);
-                }
-
-                adapter.clear();
-                adapter.addAll(tmp);
-            }
-            listRecentSearch.setAdapter(adapter);
-        } catch (Exception ex) {
-
-        }
-        */
-
         try {
 
-            String keyword = s.toString().replaceAll(" ", "");
-            if ( !Util.isEmptyString( keyword ) ) {
-
-                String url = Constants.getServerURL("/playlist/searchMySong.do");
-                HashMap param = application.getDefaultHashMap();
-
-                if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
-                        !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
-                    param.put("playListNo", getIntent().getExtras().getString("playListNo"));
-
-                param.put("keyword", keyword );
-
-                new HttpPostAsyncTask( this, url, REQUEST_SEARCH_MY_SONG ).execute(param);
-
-            }
-            else{
-                adapter.clear();
-                adapter.notifyDataSetChanged();
-            }
+            searchSongInPlayList(s.toString());
 
         } catch ( Exception ex ) {
             application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        try {
+            EditText txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
+            searchSongInPlayList( txtSongTitle.getText().toString() );
+
+        } catch ( Exception ex ) {
+            application.showToastMessage(ex.getMessage());
+        }
+    }
+
+    private void searchSongInPlayList( String keyword ) throws Exception {
+
+        if ( !Util.isEmptyString(keyword) ) {
+
+            String url = Constants.getServerURL("/playlist/searchMySong.do");
+            HashMap param = application.getDefaultHashMap();
+
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
+                    !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
+                param.put("playListNo", getIntent().getExtras().getString("playListNo"));
+
+            param.put("keyword", keyword );
+
+            new HttpPostAsyncTask( this, url, REQUEST_SEARCH_MY_SONG ).execute(param);
+
+        }
+        else{
+            adapter.clear();
+            adapter.notifyDataSetChanged();
         }
     }
 
@@ -135,8 +135,13 @@ public class SearchActivity extends BaseActivity
                         adapter.addAll(songList);
                         adapter.notifyDataSetChanged();
 
-//                        setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString( songList ) );
-//                        showToastMessage(mapper.writeValueAsString(songList));
+                        if ( songList.size() > 0 ){
+                            findViewById(R.id.listSearch).setVisibility(ViewGroup.VISIBLE);
+                            findViewById(R.id.txtEmptyGuide).setVisibility(ViewGroup.GONE);
+                        } else {
+                            findViewById(R.id.listSearch).setVisibility(ViewGroup.GONE);
+                            findViewById(R.id.txtEmptyGuide).setVisibility(ViewGroup.VISIBLE);
+                        }
                     }
                 }
                 else if ( requestCode == REQUEST_ADD_SONG_TO_PLAYLIST ) {
@@ -144,7 +149,7 @@ public class SearchActivity extends BaseActivity
                     if ( data.get("song") != null ) {
                         HashMap item = (HashMap) data.get("song");
                         Intent intent = new Intent(this, SearchResultActivity.class);
-                        intent.putExtra("playListItem", item);
+                        intent.putExtra("item", item);
                         startActivity(intent);
                     }
                 }
@@ -166,9 +171,7 @@ public class SearchActivity extends BaseActivity
         {
             SearchResultViewHolder viewHolder = (SearchResultViewHolder)view.getTag();
 
-            Intent intent = new Intent(this, SearchResultActivity.class);
-            intent.putExtra("playListItem", viewHolder.item);
-            startActivity(intent);
+            playSong(viewHolder.item);
 
             application.showToastMessage(viewHolder.txtTitle.getText().toString());
         }
@@ -178,29 +181,38 @@ public class SearchActivity extends BaseActivity
         }
     }
 
+    private void playSong(HashMap item) {
+
+        boolean bExistsVideoID = false;
+
+        if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+            if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
+        } else {
+            if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
+        }
+
+        if ( bExistsVideoID == false ) {
+
+            Intent intent = new Intent(this, SearchResultActivity.class);
+            intent.putExtra("item", item);
+            startActivity(intent);
+
+        } else {
+            Intent intent = new Intent( this, FullscreenPlayerActivity.class);
+            intent.putExtra("playListItem", item);
+            intent.putExtra("playFrom", Constants.PLAY_FROM_PLAYLIST );
+            startActivity(intent);
+        }
+
+    }
+
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-
-        /*
-        landscape 모드일 때에 키보드에 조금 치다가 done 을 누르면 바로 검색이 실행돼버림.
-        try {
-
-            String title = v.getText().toString();
-
-            if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE )))
-                showGuideDialog(title);
-            else
-                searchSong(title);
-
-        } catch ( Exception ex ) {
-            application.showToastMessage(ex);
-        }
-        */
 
         return false;
     }
 
-    private void searchSong(String title) throws Exception{
+    private void addSong(String title) throws Exception{
 
         if (!Util.isEmptyString(title)) {
 
@@ -228,7 +240,7 @@ public class SearchActivity extends BaseActivity
             if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE )))
                 showGuideDialog(title);
             else
-                searchSong(title);
+                addSong(title);
 
         } catch( Exception ex ) {
             application.showToastMessage(ex);
@@ -253,7 +265,7 @@ public class SearchActivity extends BaseActivity
                         application.setMetaInfo( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE, "Y");
                     dialog.dismiss();
 
-                    searchSong(title);
+                    addSong(title);
 
                 } catch (Exception ex) {
                     application.showToastMessage(ex.getMessage());

@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package fragment;
 
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -20,10 +21,20 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
+import org.json.JSONArray;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import activity.EditPlayListActivity;
+import activity.PlayListMainActivity;
 import adapter.PlayListAdapter;
 import adapter.PlayListViewHolder;
 
@@ -40,6 +51,7 @@ public class MyPlaylistFragment extends BaseFragment
 
     int REQUEST_MY_LIST = 1;
     int REQUEST_ADD_PLAYLIST = 2;
+    int REQUEST_ADD_SONGS = 3;
 
     int REQUEST_CONFIRM_DELETE = 100;
 
@@ -150,6 +162,12 @@ public class MyPlaylistFragment extends BaseFragment
 
                     TextView txtListTitle = (TextView) listHeaderView.findViewById(R.id.txtListTitle);
                     txtListTitle.setText("전체 " + myList.size() + "개");
+
+                    // 1.0 버전에서 마이그레이션 데이터가 있을 경우
+                    migrateData( myList );
+
+                } else if ( requestCode == REQUEST_ADD_SONGS ) {
+                    application.setMetaInfo("recentSearchSongs", "");
                 }
             }
             else
@@ -163,6 +181,45 @@ public class MyPlaylistFragment extends BaseFragment
             application.showToastMessage(ex.getMessage());
         }
 
+    }
+
+    private void migrateData( List<HashMap> myList )
+    {
+        try
+        {
+            String recentSongs = application.getMetaInfoString("recentSearchSongs");
+
+            if ( !TextUtils.isEmpty( recentSongs ) )
+            {
+                JSONArray songs = new JSONArray(recentSongs);
+                ArrayList songList = new ArrayList();
+                for ( int i = 0; i < songs.length(); i++ )
+                {
+                    HashMap obj = new HashMap();
+                    obj.put("title", songs.getString(i));
+                    songList.add(obj);
+                }
+
+                String playListNo = "";
+                for ( int i = 0; i < myList.size(); i++ ) {
+                    HashMap playlist = myList.get(i);
+                    if ("기본".equals( Util.getStringFromHash(playlist, "Name"))) {
+                        playListNo = Util.getStringFromHash(playlist, "playListNo");
+                    }
+                }
+
+                String url = Constants.getServerURL("/playlist/addSongs.do");
+                HashMap param = application.getDefaultHashMap();
+                param.put("playListNo", playListNo);
+                param.put("songList", songList);
+
+                new HttpPostAsyncTask( this, url, REQUEST_ADD_SONGS ).execute(param);
+            }
+        }
+        catch( Exception ex )
+        {
+            application.showToastMessage(ex.getMessage());
+        }
     }
 
     @Override
@@ -191,7 +248,11 @@ public class MyPlaylistFragment extends BaseFragment
                     try {
                         EditText edtPlayListName = (EditText) dialog.findViewById(R.id.edtPlayListName);
 
-                        if ("기본".equals(edtPlayListName.getText().toString())) {
+                        if ("".equals(edtPlayListName.getText().toString())) {
+                            edtPlayListName.setError("앨범의 이름을 입력해 주십시오.");
+                            return;
+                        }
+                        else if ("기본".equals(edtPlayListName.getText().toString())) {
                             edtPlayListName.setError("다른 이름으로 지정해 주시기 바랍니다.");
                             return;
                         }

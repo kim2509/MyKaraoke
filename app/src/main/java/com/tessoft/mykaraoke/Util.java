@@ -36,6 +36,12 @@ public class Util {
 			return dist.replaceAll("km", "");
 	}
 
+	public static String getFormattedDateString( long time, String format ) throws Exception
+	{
+		Date d = new Date(time);
+		return getDateStringFromDate(d, format);
+	}
+
 	public static Date getDateFromString( String dateString, String format ) throws Exception
 	{
 		if ( dateString == null || "".equals(dateString) ) return null;

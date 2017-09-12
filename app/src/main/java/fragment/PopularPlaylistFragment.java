@@ -1,6 +1,9 @@
-package com.tessoft.mykaraoke;
+package fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,10 +13,15 @@ import android.widget.ListView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
 
 import java.util.HashMap;
 import java.util.List;
 
+import activity.PlayListMainActivity;
 import adapter.PlayListAdapter;
 import adapter.PlayListViewHolder;
 
@@ -38,7 +46,23 @@ public class PopularPlaylistFragment extends BaseFragment implements AdapterView
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getActivity().registerReceiver(mMessageReceiver, new IntentFilter(Constants.BROADCAST_RELOAD_POPULAR_PLAYLIST));
     }
+
+    private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try
+            {
+                if ( intent.getAction().equals(Constants.BROADCAST_RELOAD_POPULAR_PLAYLIST))
+                    loadPopularList();
+            }
+            catch( Exception ex )
+            {
+                application.showToastMessage(ex);
+            }
+        }
+    };
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -55,6 +79,8 @@ public class PopularPlaylistFragment extends BaseFragment implements AdapterView
             list.setOnItemClickListener(this);
             adapter = new PlayListAdapter(getActivity(), 0);
             list.setAdapter(adapter);
+
+            loadPopularList();
         }
         catch( Exception ex )
         {
@@ -69,7 +95,6 @@ public class PopularPlaylistFragment extends BaseFragment implements AdapterView
         try {
 
             super.onResume();
-            loadPopularList();
 
         } catch( Exception ex ){
             application.showToastMessage(ex);
@@ -130,5 +155,6 @@ public class PopularPlaylistFragment extends BaseFragment implements AdapterView
     @Override
     public void onDestroy() {
         super.onDestroy();
+        getActivity().unregisterReceiver(mMessageReceiver);
     }
 }

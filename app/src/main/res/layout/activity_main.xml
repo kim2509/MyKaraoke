@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PlayListMainActivity">
+    tools:context="activity.PlayListMainActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -35,23 +35,23 @@
 
             <Button
                 android:id="@+id/btnShuffle"
-                android:layout_width="35dp"
+                android:layout_width="60dp"
                 android:layout_height="35dp"
                 android:background="#f7f8f2"
                 android:layout_marginRight="10dp"
                 android:layout_centerVertical="true"
-                android:text="F"
+                android:text="최근순"
                 android:onClick="shuffle"
-                android:layout_toLeftOf="@+id/btnSortAsc"/>
+                android:layout_toLeftOf="@+id/btnSort"/>
 
             <Button
-                android:id="@+id/btnSortAsc"
-                android:layout_width="35dp"
+                android:id="@+id/btnSort"
+                android:layout_width="60dp"
                 android:layout_height="35dp"
                 android:background="#f7f8f2"
                 android:layout_centerVertical="true"
                 android:layout_marginRight="10dp"
-                android:text="S"
+                android:text="정렬"
                 android:layout_toLeftOf="@+id/spinnerPlayMode"
                 android:onClick="sort"/>
 
@@ -79,7 +79,7 @@
             android:textSize="18sp"
             android:textColor="#ff4900"
             android:textStyle="bold"
-            android:text="저장된 곡이 없습니다.\n\n노래를 검색하시면 자동으로 곡이 추가됩니다."
+            android:text="저장된 곡이 없습니다.\n\n상단의 검색아이콘으로 노래를 검색하시면\n\n자동으로 곡이 추가됩니다."
             android:visibility="gone"
             />
     </RelativeLayout>

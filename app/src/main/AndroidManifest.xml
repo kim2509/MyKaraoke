@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".HomeActivity">
+        <activity android:name="activity.HomeActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -20,32 +20,32 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".PlayListMainActivity"
+            android:name="activity.PlayListMainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="재생목록"
             android:windowSoftInputMode="stateHidden" />
         <activity
-            android:name=".FullscreenPlayerActivity"
+            android:name="activity.FullscreenPlayerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_fullscreen_player"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
-            android:name=".SearchResultActivity"
+            android:name="activity.SearchResultActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="검색결과"
             android:theme="@style/FullscreenTheme" />
         <activity
-            android:name=".SettingsActivity"
+            android:name="activity.SettingsActivity"
             android:label="@string/title_activity_settings" />
         <activity
-            android:name=".SettingActivity"
+            android:name="activity.SettingActivity"
             android:label="@string/title_activity_settings" />
-        <activity android:name=".ItemDetailActivity" />
-        <activity android:name=".EditItemActivity" />
+        <activity android:name="activity.ItemDetailActivity" />
+        <activity android:name="activity.EditItemActivity" />
         <activity
-            android:name=".SearchActivity"
+            android:name="activity.SearchActivity"
             android:label="검색" />
-        <activity android:name=".EditPlayListActivity"></activity>
+        <activity android:name="activity.EditPlayListActivity"></activity>
     </application>
 
 </manifest>

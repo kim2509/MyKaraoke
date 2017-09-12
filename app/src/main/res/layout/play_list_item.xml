@@ -20,6 +20,43 @@
             android:paddingTop="5dp"
             android:paddingBottom="5dp" />
 
+        <TextView
+            android:id="@+id/txtPlayCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:text="재생수:0"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:layout_below="@+id/txtName"
+            />
+
+        <TextView
+            android:id="@+id/txtItemCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:text="곡 수:0"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:layout_marginLeft="20dp"
+            android:layout_below="@+id/txtName"
+            android:layout_toRightOf="@+id/txtPlayCount"
+            />
+
+        <TextView
+            android:id="@+id/txtCreatedDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:text="생성일자"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:layout_marginLeft="20dp"
+            android:layout_below="@+id/txtName"
+            android:layout_alignParentRight="true"
+            />
+
     </RelativeLayout>
 
 </LinearLayout>

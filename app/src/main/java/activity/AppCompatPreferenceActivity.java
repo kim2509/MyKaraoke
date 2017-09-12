@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

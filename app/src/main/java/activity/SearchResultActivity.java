@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +14,11 @@ import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,12 +52,12 @@ public class SearchResultActivity extends BaseActivity
             listSearch.setAdapter(adapter);
             listSearch.setOnItemClickListener(this);
 
-            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListItem"))
+            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("item"))
             {
-                item = (HashMap) getIntent().getExtras().get("playListItem");
+                item = (HashMap) getIntent().getExtras().get("item");
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
-                title += " " + singer + " " + application.getMetaInfoString("play_mode");
+                title += " " + singer + " " + application.getMetaInfoString(Constants.PREF_PLAY_MODE);
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");
                 HashMap param = application.getDefaultHashMap();
@@ -161,18 +166,20 @@ public class SearchResultActivity extends BaseActivity
     }
 
     public void go( HashMap item, boolean bFinish ){
-
         timer.cancel();
-
         Intent intent = new Intent( this, FullscreenPlayerActivity.class);
-
         if ( getIntent() != null && getIntent().getExtras().get("playListItem") != null )
             intent.putExtra("playListItem", (HashMap) getIntent().getExtras().get("playListItem"));
 
+        // 검색어로 타이틀명 대체
+        HashMap tmp = (HashMap) getIntent().getExtras().get("item");
+        String title = Util.getStringFromHash(tmp, "title");
+        item.put("title", title);
+
         intent.putExtra("songItem", item);
         intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_RESULT);
-
         startActivity(intent);
+
         if ( bFinish )
             finish();
     }

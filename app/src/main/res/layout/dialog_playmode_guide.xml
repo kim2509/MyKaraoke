@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/titleBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#3E4EB0">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="안내"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="10dp"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ffffff"
+        android:paddingTop="20dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:layout_below="@+id/titleBar">
+
+        <TextView
+            android:id="@+id/txtGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:text="뮤직비디오로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다."/>
+
+        <LinearLayout
+            android:id="@+id/layoutCheckbox"
+            android:layout_below="@id/txtGuide"
+            android:layout_width="match_parent"
+            android:layout_marginTop="30dp"
+            android:layout_height="wrap_content">
+
+            <CheckBox
+                android:id="@+id/chkShow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:text="다음부터 보지 않음"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/layoutCheckbox"
+            android:layout_marginTop="10dp"
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/dialogButtonOK"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="확인"/>
+
+            <Button
+                android:id="@+id/dialogButtonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="닫기"/>
+
+        </LinearLayout>
+
+
+    </RelativeLayout>
+</RelativeLayout>

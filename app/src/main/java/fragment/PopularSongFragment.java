@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package fragment;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,10 +13,15 @@ import android.widget.ListView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
 
 import java.util.HashMap;
 import java.util.List;
 
+import activity.FullscreenPlayerActivity;
 import adapter.PopularItemAdapter;
 import adapter.PopularItemViewHolder;
 
@@ -30,7 +35,7 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
     PopularItemAdapter adapter = null;
 
     int REQUEST_POPULAR_LIST = 1;
-    int selectedItemIndex = 0;
+    public static int selectedItemIndex = 0;
 
     // TODO: Rename and change types and number of parameters
     public static PopularSongFragment newInstance() {
@@ -43,6 +48,8 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getActivity().registerReceiver(mMessageReceiver, new IntentFilter(Constants.BROADCAST_PLAY_NEXT_POPULAR_SONG));
+        getActivity().registerReceiver(mMessageReceiver, new IntentFilter(Constants.BROADCAST_PLAY_PREVIOUS_POPULAR_SONG));
+        getActivity().registerReceiver(mMessageReceiver, new IntentFilter(Constants.BROADCAST_RELOAD_POPULAR_SONG));
     }
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
@@ -52,6 +59,10 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
             {
                 if ( intent.getAction().equals(Constants.BROADCAST_PLAY_NEXT_POPULAR_SONG))
                     playNext();
+                else if ( intent.getAction().equals(Constants.BROADCAST_PLAY_PREVIOUS_POPULAR_SONG))
+                    playPreviousSong();
+                else if ( intent.getAction().equals(Constants.BROADCAST_RELOAD_POPULAR_SONG))
+                    loadPopularList();
             }
             catch( Exception ex )
             {
@@ -75,6 +86,8 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
             list.setOnItemClickListener(this);
             adapter = new PopularItemAdapter(getActivity(), 0);
             list.setAdapter(adapter);
+
+            loadPopularList();
         }
         catch( Exception ex )
         {
@@ -89,7 +102,6 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
         try {
 
             super.onResume();
-            loadPopularList();
 
         } catch( Exception ex ){
             application.showToastMessage(ex);
@@ -166,6 +178,20 @@ public class PopularSongFragment extends BaseFragment implements AdapterView.OnI
                     selectedItemIndex + 1,
                     list.getAdapter().getItemId(selectedItemIndex+1));
         }
+    }
+
+    public void playPreviousSong(){
+
+        if ( selectedItemIndex - 1 >= 0 ){
+
+            list.smoothScrollToPosition(selectedItemIndex - 1);
+
+            list.performItemClick(
+                    list.getAdapter().getView(selectedItemIndex - 1, null, null),
+                    selectedItemIndex - 1,
+                    list.getAdapter().getItemId(selectedItemIndex - 1));
+        }
+
     }
 
     @Override

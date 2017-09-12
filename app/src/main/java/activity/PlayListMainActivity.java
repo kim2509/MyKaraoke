@@ -1,8 +1,10 @@
-package com.tessoft.mykaraoke;
+package activity;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -16,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -24,6 +27,11 @@ import android.widget.Toast;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import org.json.JSONArray;
 
@@ -48,14 +56,18 @@ public class PlayListMainActivity extends BaseActivity
     int REQUEST_SHARE_PLAYLIST = 1;
     int REQUEST_LOAD_PLAYLIST_SONG = 2;
     int REQUEST_DELETE_ITEM = 3;
+    int REQUEST_UNSHARE_PLAYLIST = 4;
 
     int REQUEST_CONFIRM_DELETE = 100;
+    int REQUEST_CONFIRM_UNSHARE = 101;
 
     public static int sortMode = 0;
 
     public static int SORT_ALPHA_ASC = 1;
     public static int SORT_ALPHA_DESC = 2;
     public static int SORT_SHUFFLE = 3;
+    public static int SORT_KARAOKE_PLAYCOUNT_DESC = 4;
+    public static int SORT_MV_PLAYCOUNT_DESC = 5;
 
     private BroadcastReceiver mMessageReceiver = new BroadcastReceiver() {
         @Override
@@ -103,6 +115,11 @@ public class PlayListMainActivity extends BaseActivity
 
             Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
             spinnerPlayMode.setOnItemSelectedListener(this);
+
+            loadPlayListSongs();
+
+            if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_PLAY_MODE )))
+                showGuideDialog();
         }
         catch(Exception ex )
         {
@@ -114,7 +131,7 @@ public class PlayListMainActivity extends BaseActivity
         if ( getIntent() != null && getIntent().getExtras().containsKey("playListItem") &&
                 getIntent().getExtras().get("playListItem") != null ) {
             playListItem = (HashMap) getIntent().getExtras().get("playListItem");
-            setTitle( Util.getStringFromHash( playListItem, "Name"));
+            setTitle( Util.getStringFromHash(playListItem, "Name"));
 
             // 기존에 로딩된 곡 리스트와 선택한 재생목록이 다를 경우 리셋
             String playListNo = Util.getStringFromHash(playListItem, "playListNo");
@@ -146,13 +163,6 @@ public class PlayListMainActivity extends BaseActivity
     protected void onResume() {
         try {
             super.onResume();
-
-//            if ( bShuffle == false )
-//                songList.clear();
-//
-
-            if ( sortMode == 0 )
-                loadPlayListSongs();
 
             // 현재 play mode 설정
             String playMode = application.getMetaInfoString(Constants.PREF_PLAY_MODE);
@@ -238,17 +248,56 @@ public class PlayListMainActivity extends BaseActivity
         try
         {
             SongViewHolder viewHolder = (SongViewHolder)view.getTag();
-
             selectedItemIndex = position;
-
             playSong(viewHolder.item);
-
             application.showToastMessage(viewHolder.txtSongTitle.getText().toString());
         }
         catch ( Exception ex )
         {
             application.showToastMessage(ex);
         }
+    }
+
+    public void showGuideDialog(){
+
+        // custom dialog
+        final Dialog dialog = new Dialog( this );
+        dialog.setContentView(R.layout.dialog_playmode_guide);
+
+        TextView txtGuide = (TextView) dialog.findViewById(R.id.txtGuide);
+        if ( "뮤직비디오".equals( application.getMetaInfoString( Constants.PREF_PLAY_MODE ) ) )
+            txtGuide.setText("뮤직비디오모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
+        else
+            txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 뮤직비디오로 변경하실수 있습니다.");
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    CheckBox chkShow = (CheckBox) dialog.findViewById(R.id.chkShow);
+                    if ( chkShow.isChecked() )
+                        application.setMetaInfo( Constants.GUIDE_DO_NOT_PLAY_MODE, "Y");
+                    dialog.dismiss();
+
+                } catch (Exception ex) {
+                    application.showToastMessage(ex.getMessage());
+                }
+            }
+        });
+
+        Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
+        // if button is clicked, close the custom dialog
+        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
     }
 
     public void playPreviousSong(){
@@ -299,7 +348,7 @@ public class PlayListMainActivity extends BaseActivity
 
         boolean bExistsVideoID = false;
 
-        if ("뮤직비디오".equals( application.getMetaInfoString("play_mode")) ) {
+        if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
@@ -308,6 +357,7 @@ public class PlayListMainActivity extends BaseActivity
         if ( bExistsVideoID == false ) {
 
             Intent intent = new Intent(this, SearchResultActivity.class);
+            intent.putExtra("item", item);
             intent.putExtra("playListItem", item);
             startActivity(intent);
 
@@ -371,36 +421,64 @@ public class PlayListMainActivity extends BaseActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        try {
+
+            // Inflate the menu; this adds items to the action bar if it is present.
+            getMenuInflater().inflate(R.menu.menu_main, menu);
+
+            HashMap defaultHashMap = (HashMap) application.getDefaultHashMap();
+            String myTempUserNo = Util.getStringFromHash(defaultHashMap, "tempUserNo");
+            if ( playListItem != null && myTempUserNo.equals( Util.getStringFromHash(playListItem,"tempUserNo") ) )
+            {
+                MenuItem item = menu.findItem(R.id.share);
+                item.setVisible(true);
+            }
+            else {
+                MenuItem item = menu.findItem(R.id.share);
+                item.setVisible(false);
+            }
+
+
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = menuItem.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.goSearch) {
+        try {
+            // Handle action bar item clicks here. The action bar will
+            // automatically handle clicks on the Home/Up button, so long
+            // as you specify a parent activity in AndroidManifest.xml.
+            int id = menuItem.getItemId();
 
-            Intent intent = new Intent(this, SearchActivity.class);
-            if ( playListItem != null )
-                intent.putExtra("playListNo", Util.getStringFromHash( playListItem, "playListNo"));
+            //noinspection SimplifiableIfStatement
+            if (id == R.id.goSearch) {
 
-            startActivity(intent);
+                Intent intent = new Intent(this, SearchActivity.class);
+                if ( playListItem != null )
+                    intent.putExtra("playListNo", Util.getStringFromHash( playListItem, "playListNo"));
 
-            return true;
-        }
+                startActivity(intent);
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.share) {
+                return true;
+            } else if (id == R.id.share) {
 
-            showShareDialog();
+                if (!"Y".equals( Util.getStringFromHash(playListItem, "shareYN")))
+                    showShareDialog();
+                else
+                    showYesNoDialog("경고", "현재 해당목록은 공유된 상태입니다.\r\n공유를 해제하시겠습니까?", REQUEST_CONFIRM_UNSHARE, null);
 
-            return true;
+                return true;
+            } else if ( id == R.id.reload ) {
+                loadPlayListSongs();
+            }
+        } catch ( Exception ex ) {
+            application.showToastMessage(ex);
         }
 
         return super.onOptionsItemSelected(menuItem);
@@ -503,7 +581,10 @@ public class PlayListMainActivity extends BaseActivity
                     HashMap data = (HashMap) response.getData();
                     if ( data.containsKey("item") && data.get("item") != null ) {
                         setTitle( Util.getStringFromHash( (HashMap) data.get("item"), "Name"));
+                        playListItem = (HashMap) data.get("item");
                     }
+
+                    showOKDialog("알림", "공유되었습니다.", null);
                 }
                 else if ( requestCode == REQUEST_LOAD_PLAYLIST_SONG ) {
                     HashMap data = (HashMap) response.getData();
@@ -519,6 +600,15 @@ public class PlayListMainActivity extends BaseActivity
 
                             if ( getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT )
                                 findViewById(R.id.optionLayout).setVisibility(ViewGroup.VISIBLE);
+
+                            // 정렬 초기화
+                            sortMode = 0;
+                            selectedItemIndex = 0;
+                            Button btnSort = (Button) findViewById(R.id.btnSort);
+                            btnSort.setText("정렬");
+                            Button btnShuffle = (Button) findViewById(R.id.btnShuffle);
+                            btnShuffle.setText("최근순");
+
                         } else {
                             findViewById(R.id.txtEmpty).setVisibility(ViewGroup.VISIBLE);
                             findViewById(R.id.listRecentSearch).setVisibility(ViewGroup.GONE);
@@ -526,6 +616,12 @@ public class PlayListMainActivity extends BaseActivity
                         }
 
                     }
+                } else if ( requestCode == REQUEST_UNSHARE_PLAYLIST) {
+                    HashMap data = (HashMap) response.getData();
+                    if ( data.containsKey("item") && data.get("item") != null ) {
+                        playListItem = (HashMap) data.get("item");
+                    }
+                    showOKDialog("알림", "공유가 해제되었습니다.", null);
                 }
             }
             else
@@ -546,17 +642,21 @@ public class PlayListMainActivity extends BaseActivity
     {
         try
         {
+            Button btnShuffle = (Button) findViewById(R.id.btnShuffle);
+
             if ( sortMode == 0 )
             {
                 Collections.shuffle(songList);
                 Collections.shuffle(songList);
                 Collections.shuffle(songList);
                 sortMode = SORT_SHUFFLE;
+                btnShuffle.setText("임의대로");
             }
             else
             {
                 loadPlayListSongs();
                 sortMode = 0;
+                btnShuffle.setText("최근순");
             }
 
             selectedItemIndex = 0;
@@ -574,25 +674,84 @@ public class PlayListMainActivity extends BaseActivity
 
     public void sort( View v )
     {
-        Collections.sort(songList, new Comparator<HashMap>() {
-            @Override
-            public int compare(HashMap lhs, HashMap rhs) {
+        final CharSequence[] items = {"오름차순", "내림차순", "노래방재생순", "뮤비재생순"};
 
-                String titleLeft = Util.getStringFromHash(lhs, "title");
-                String titleRight = Util.getStringFromHash(rhs, "title");
-
-                if (sortMode != SORT_ALPHA_ASC) {
-                    return titleLeft.compareTo(titleRight);
-                } else {
-                    return titleLeft.compareTo(titleRight) * -1;
-                }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("정렬 옵션을 선택해 주세요.");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                changeSort(item);
             }
         });
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
 
-        if (sortMode != SORT_ALPHA_ASC) {
+    public void changeSort( int sortOption ) {
+
+        Button btnSort = (Button) findViewById(R.id.btnSort);
+
+        if ( sortOption == 0 && sortMode != SORT_ALPHA_ASC ) {
+
+            Collections.sort(songList, new Comparator<HashMap>() {
+                @Override
+                public int compare(HashMap lhs, HashMap rhs) {
+
+                    String titleLeft = Util.getStringFromHash(lhs, "title");
+                    String titleRight = Util.getStringFromHash(rhs, "title");
+
+                    return titleLeft.compareTo(titleRight);
+                }
+            });
+
             sortMode = SORT_ALPHA_ASC;
-        } else {
+            btnSort.setText("오름차순");
+
+        } else if ( sortOption == 1 && sortMode != SORT_ALPHA_DESC) {
+
+            Collections.sort(songList, new Comparator<HashMap>() {
+                @Override
+                public int compare(HashMap lhs, HashMap rhs) {
+
+                    String titleLeft = Util.getStringFromHash(lhs, "title");
+                    String titleRight = Util.getStringFromHash(rhs, "title");
+
+                    return titleLeft.compareTo(titleRight) * -1;
+                }
+            });
+
             sortMode = SORT_ALPHA_DESC;
+            btnSort.setText("내림차순");
+        } else if ( sortOption == 2 && sortMode != SORT_KARAOKE_PLAYCOUNT_DESC ) {
+
+            Collections.sort(songList, new Comparator<HashMap>() {
+                @Override
+                public int compare(HashMap lhs, HashMap rhs) {
+
+                    String playCountLeft = Util.getStringFromHash(lhs, "playCount1");
+                    String playCountRight = Util.getStringFromHash(rhs, "playCount1");
+
+                    return playCountLeft.compareTo(playCountRight) * -1;
+                }
+            });
+
+            sortMode = SORT_KARAOKE_PLAYCOUNT_DESC;
+            btnSort.setText("노래방순");
+        } else if ( sortOption == 3 && sortMode != SORT_MV_PLAYCOUNT_DESC) {
+
+            Collections.sort(songList, new Comparator<HashMap>() {
+                @Override
+                public int compare(HashMap lhs, HashMap rhs) {
+
+                    String playCountLeft = Util.getStringFromHash(lhs, "playCount2");
+                    String playCountRight = Util.getStringFromHash(rhs, "playCount2");
+
+                    return playCountLeft.compareTo(playCountRight) * -1;
+                }
+            });
+
+            sortMode = SORT_MV_PLAYCOUNT_DESC;
+            btnSort.setText("뮤비순");
         }
 
         adapter.clear();
@@ -643,6 +802,16 @@ public class PlayListMainActivity extends BaseActivity
                 adapter.clear();
                 adapter.addAll(songList);
                 adapter.notifyDataSetChanged();
+            }
+            else if ( requestCode == REQUEST_CONFIRM_UNSHARE ) {
+
+                String url = Constants.getServerURL("/playlist/share.do");
+                HashMap postParam = application.getDefaultHashMap();
+
+                postParam.put("playListNo", Util.getStringFromHash(playListItem, "playListNo"));
+                postParam.put("Name", Util.getStringFromHash(playListItem, "Name"));
+                postParam.put("shareYN", "N");
+                new HttpPostAsyncTask( this, url, REQUEST_UNSHARE_PLAYLIST ).execute(postParam);
             }
 
         } catch( Exception ex ) {

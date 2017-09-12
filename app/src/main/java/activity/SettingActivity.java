@@ -1,8 +1,10 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
+
+import com.tessoft.mykaraoke.R;
 
 /**
  * Created by Daeyong on 2017-08-17.

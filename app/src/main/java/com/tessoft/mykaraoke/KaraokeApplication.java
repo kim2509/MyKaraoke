@@ -52,6 +52,13 @@ public class KaraokeApplication extends Application {
     {
         if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )))
             setMetaInfo( Constants.PREF_PLAY_MODE, "뮤직비디오");
+
+
+//        setMetaInfo( Constants.AGREE_TERMS, "" );
+//        setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "" );
+//        setMetaInfo( Constants.GUIDE_DO_NOT_PLAY_MODE, "" );
+//        setMetaInfo( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE, "" );
+
     }
 
     private void initializeUniversalImageLoader() {
@@ -110,6 +117,7 @@ public class KaraokeApplication extends Application {
             String[] tokens = loginInfo.split("\\;");
 
             String server = "";
+            String tempUserNo = "";
 
             for ( int i = 0; i < tokens.length; i++ )
             {
@@ -117,6 +125,8 @@ public class KaraokeApplication extends Application {
                 String value = tokens[i].split("\\=")[1];
                 if ( "server".equals( key ) )
                     server = value.trim();
+                else if ( "tempUserNo".equals( key ) )
+                    tempUserNo = value.trim();
             }
 
             if ( "REAL".equals( server ) )
@@ -125,6 +135,14 @@ public class KaraokeApplication extends Application {
                 Constants.bReal = false;
             else
                 Constants.bReal = true;
+
+            if ( !Util.isEmptyString( tempUserNo ) ){
+                HashMap userInfo = getUserInfoMap();
+                userInfo.put("tempUserNo", tempUserNo);
+
+                ObjectMapper mapper = new ObjectMapper();
+                setMetaInfo("userInfo", mapper.writeValueAsString( userInfo ));
+            }
 
         }
         catch( Exception ex )

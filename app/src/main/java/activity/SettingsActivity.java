@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 
 import android.annotation.TargetApi;
@@ -20,6 +20,9 @@ import android.preference.RingtonePreference;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.R;
 
 import java.util.List;
 
@@ -183,7 +186,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("play_mode"));
+            bindPreferenceSummaryToValue(findPreference(Constants.PREF_PLAY_MODE));
             bindPreferenceSummaryToValue(findPreference("example_list"));
         }
 

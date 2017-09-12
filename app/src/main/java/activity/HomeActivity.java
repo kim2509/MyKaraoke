@@ -1,9 +1,8 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
@@ -11,16 +10,17 @@ import android.view.ViewGroup;
 import com.astuetz.PagerSlidingTabStrip;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
-import java.util.List;
 
 import adapter.MainPagerAdapter;
 
-public class HomeActivity extends BaseActivity{
+public class HomeActivity extends BaseActivity implements ViewPager.OnPageChangeListener {
 
     ViewPager pager = null;
     MainPagerAdapter pagerAdapter = null;
@@ -28,6 +28,7 @@ public class HomeActivity extends BaseActivity{
 
     int REQUEST_LOGIN = 1;
     int REQUEST_MAIN = 2;
+    int selectedTabIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +46,9 @@ public class HomeActivity extends BaseActivity{
             // Bind the tabs to the ViewPager
             tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
             tabs.setViewPager(pager);
+            tabs.setOnPageChangeListener(this);
 
             guestLogin();
-
-            // 데이터 마이그레이션
-            migrateData();
         }
         catch( Exception ex )
         {
@@ -89,57 +88,11 @@ public class HomeActivity extends BaseActivity{
         findViewById(R.id.marker_progress).setVisibility(ViewGroup.VISIBLE);
     }
 
-    private void migrateData()
-    {
-        try
-        {
-            String recentSongsV2 = application.getMetaInfoString("recentSearchSongsV2");
-            if (TextUtils.isEmpty(recentSongsV2))
-            {
-                String recentSongs = application.getMetaInfoString("recentSearchSongs");
-
-                if ( !TextUtils.isEmpty( recentSongs ) )
-                {
-                    JSONArray songs = new JSONArray(recentSongs);
-                    JSONArray songsV2 = new JSONArray();
-                    for ( int i = 0; i < songs.length(); i++ )
-                    {
-                        JSONObject obj = new JSONObject();
-                        obj.put("title", songs.getString(i));
-                        songsV2.put(obj);
-                    }
-
-                    application.setMetaInfo("recentSearchSongsV2", songsV2.toString());
-                }
-            }
-            else
-            {
-                recentSongsV2 = application.getMetaInfoString("recentSearchSongsV2");
-                if ( !TextUtils.isEmpty( recentSongsV2 ) ){
-                    ObjectMapper mapper = new ObjectMapper();
-                    List<HashMap> songs = mapper.readValue(recentSongsV2, new TypeReference<List<HashMap>>(){});
-                    if ( songs != null && songs.size() > 0 ) {
-                        for ( int i = 0; i < songs.size(); i++ ){
-                            HashMap song = songs.get(i);
-                            //if ( Util.isEmptyForKey( song, "itemNo" ) )
-                            song.put("itemNo", i + 1 );
-                        }
-
-                        application.setMetaInfo("recentSearchSongsV2", mapper.writeValueAsString(songs));
-                    }
-                }
-            }
-        }
-        catch( Exception ex )
-        {
-            application.showToastMessage(ex.getMessage());
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_home, menu);
+
         return true;
     }
 
@@ -157,6 +110,19 @@ public class HomeActivity extends BaseActivity{
             startActivity(intent);
 
             return true;
+        }
+        else if ( id == R.id.reload ) {
+            Intent intent = null;
+            if ( selectedTabIndex == 0 ) {
+                intent = new Intent(Constants.BROADCAST_RELOAD_POPULAR_MV);
+            } else if ( selectedTabIndex == 1 ) {
+                intent = new Intent(Constants.BROADCAST_RELOAD_POPULAR_SONG);
+            } else if ( selectedTabIndex == 3 ) {
+                intent = new Intent(Constants.BROADCAST_RELOAD_POPULAR_PLAYLIST);
+            } else if ( selectedTabIndex == 4 ) {
+                intent = new Intent(Constants.BROADCAST_LOAD_MY_PLAYLIST);
+            }
+            sendBroadcast(intent);
         }
 
         return super.onOptionsItemSelected(item);
@@ -208,5 +174,20 @@ public class HomeActivity extends BaseActivity{
         {
             application.showToastMessage(ex.getMessage());
         }
+    }
+
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        selectedTabIndex = position;
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
     }
 }

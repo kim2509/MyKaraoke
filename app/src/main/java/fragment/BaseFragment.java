@@ -1,21 +1,29 @@
-package com.tessoft.mykaraoke;
+package fragment;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
+
+import com.tessoft.mykaraoke.KaraokeApplication;
+import com.tessoft.mykaraoke.TransactionDelegate;
 
 /**
- * Created by Daeyong on 2017-08-22.
+ * Created by Daeyong on 2017-09-01.
  */
-public class BaseActivity extends AppCompatActivity implements TransactionDelegate {
+public class BaseFragment extends Fragment implements TransactionDelegate {
 
     KaraokeApplication application = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        application = (KaraokeApplication) getApplication();
+        application = (KaraokeApplication) getActivity().getApplication();
+    }
+
+    @Override
+    public void doPostTransaction(int requestCode, Object result) {
+
     }
 
     public void showOKDialog(String message, final Object param) {
@@ -23,7 +31,7 @@ public class BaseActivity extends AppCompatActivity implements TransactionDelega
     }
 
     public void showOKDialog(String title, String message, final Object param) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder( getActivity() );
 
         builder.setTitle(title)
                 .setMessage(message)
@@ -41,25 +49,20 @@ public class BaseActivity extends AppCompatActivity implements TransactionDelega
 
     }
 
-    @Override
-    public void doPostTransaction(int requestCode, Object result) {
-
-    }
-
     public void showYesNoDialog( String title, String message, final int requestCode, final Object param )
     {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(title)
-                .setMessage( message )
+                .setMessage(message)
                 .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        yesClicked( requestCode, param );
+                        yesClicked(requestCode, param);
                     }
                 })
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        noClicked( requestCode, param );
+                        noClicked(requestCode, param);
                     }
                 });
         AlertDialog alert = builder.create();

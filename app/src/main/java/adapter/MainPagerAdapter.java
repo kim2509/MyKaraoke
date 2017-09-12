@@ -6,10 +6,11 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import com.tessoft.mykaraoke.KaraokeApplication;
-import com.tessoft.mykaraoke.MyPlaylistFragment;
-import com.tessoft.mykaraoke.PopularMVFragment;
-import com.tessoft.mykaraoke.PopularPlaylistFragment;
-import com.tessoft.mykaraoke.PopularSongFragment;
+import fragment.MyPlaylistFragment;
+import fragment.PopularMVFragment;
+import fragment.PopularPlaylistFragment;
+import fragment.PopularSongFragment;
+import fragment.SongSearchFragment;
 
 /**
  * Created by Daeyong on 2015-12-14.
@@ -24,12 +25,13 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
 
         this.application = application;
 
-        fragments = new Fragment[4];
+        fragments = new Fragment[5];
 
         fragments[0] = PopularMVFragment.newInstance();
         fragments[1] = PopularSongFragment.newInstance();
-        fragments[2] = PopularPlaylistFragment.newInstance();
-        fragments[3] = MyPlaylistFragment.newInstance();
+        fragments[2] = SongSearchFragment.newInstance();
+        fragments[3] = PopularPlaylistFragment.newInstance();
+        fragments[4] = MyPlaylistFragment.newInstance();
     }
 
     public void setApplication( KaraokeApplication application )
@@ -42,11 +44,12 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
 
         String[] titles = null;
 
-        titles = new String[4];
+        titles = new String[5];
         titles[0] = "인기뮤비";
         titles[1] = "인기곡";
-        titles[2] = "인기 재생 목록";
-        titles[3] = "내 목록";
+        titles[2] = "검색";
+        titles[3] = "인기 재생 목록";
+        titles[4] = "내 목록";
 
         return titles[position];
     }

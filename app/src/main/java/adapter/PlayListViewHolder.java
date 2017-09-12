@@ -9,6 +9,9 @@ import java.util.HashMap;
  */
 public class PlayListViewHolder {
     public TextView txtName;
+    public TextView txtPlayCount;
+    public TextView txtItemCount;
+    public TextView txtCreatedDate;
     public String playListNo;
     public HashMap item;
 }

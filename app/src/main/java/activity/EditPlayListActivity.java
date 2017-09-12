@@ -1,4 +1,4 @@
-package com.tessoft.mykaraoke;
+package activity;
 
 import android.os.Bundle;
 import android.view.Menu;
@@ -8,6 +8,11 @@ import android.widget.TextView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tessoft.mykaraoke.APIResponse;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.HttpPostAsyncTask;
+import com.tessoft.mykaraoke.R;
+import com.tessoft.mykaraoke.Util;
 
 import java.util.HashMap;
 
