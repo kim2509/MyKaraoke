@@ -177,6 +177,11 @@ public class SearchResultActivity extends BaseActivity
         item.put("title", title);
 
         intent.putExtra("songItem", item);
+
+        if ( getIntent() != null && getIntent().getExtras() != null &&
+                getIntent().getExtras().containsKey(Constants.PLAY_FROM) )
+            intent.putExtra( Constants.REFERRER, getIntent().getExtras().getString(Constants.PLAY_FROM));
+
         intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_RESULT);
         startActivity(intent);
 

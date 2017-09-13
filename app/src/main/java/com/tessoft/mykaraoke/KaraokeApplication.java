@@ -53,12 +53,10 @@ public class KaraokeApplication extends Application {
         if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )))
             setMetaInfo( Constants.PREF_PLAY_MODE, "뮤직비디오");
 
-
 //        setMetaInfo( Constants.AGREE_TERMS, "" );
 //        setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "" );
 //        setMetaInfo( Constants.GUIDE_DO_NOT_PLAY_MODE, "" );
 //        setMetaInfo( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE, "" );
-
     }
 
     private void initializeUniversalImageLoader() {

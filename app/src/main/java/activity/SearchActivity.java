@@ -33,23 +33,40 @@ public class SearchActivity extends BaseActivity
     implements TextWatcher, AdapterView.OnItemClickListener, TextView.OnEditorActionListener{
 
     EditText txtSongTitle = null;
-    int REQUEST_SEARCH_MY_SONG = 1;
+    int REQUEST_SEARCH_PLAYLIST_SONG = 1;
     int REQUEST_ADD_SONG_TO_PLAYLIST = 2;
     ListView listSearch = null;
     SearchSongAdapter adapter = null;
+    HashMap playListItem = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_search);
 
-        listSearch = (ListView) findViewById(R.id.listSearch);
-        adapter = new SearchSongAdapter(this, 0);
-        listSearch.setAdapter(adapter);
-        listSearch.setOnItemClickListener(this);
+            listSearch = (ListView) findViewById(R.id.listSearch);
+            adapter = new SearchSongAdapter(this, 0, application);
+            listSearch.setAdapter(adapter);
+            listSearch.setOnItemClickListener(this);
 
-        // 노래 곡목 검색 기능 초기화
-        initSearchText();
+            // 노래 곡목 검색 기능 초기화
+            initSearchText();
+
+            if ( getIntent() != null && getIntent().getExtras() != null &&
+                    getIntent().getExtras().containsKey("playListItem")) {
+                playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+
+                HashMap defaultMap = application.getDefaultHashMap();
+                String tempUserNo = Util.getStringFromHash(defaultMap,"tempUserNo");
+                if ( !tempUserNo.equals( Util.getStringFromHash(playListItem, "tempUserNo") )){
+                    TextView txtEmptyGuide = (TextView) findViewById(R.id.txtEmptyGuide);
+                    txtEmptyGuide.setText("해당 검색어는 현재 재생목록에 없습니다.");
+                }
+            }
+        } catch( Exception ex ) {
+            application.showToastMessage(ex);
+        }
     }
 
     private void initSearchText() {
@@ -97,16 +114,13 @@ public class SearchActivity extends BaseActivity
 
         if ( !Util.isEmptyString(keyword) ) {
 
-            String url = Constants.getServerURL("/playlist/searchMySong.do");
+            String url = Constants.getServerURL("/playlist/searchPlayListSong.do");
             HashMap param = application.getDefaultHashMap();
 
-            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
-                    !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
-                param.put("playListNo", getIntent().getExtras().getString("playListNo"));
-
+            param.put("playListNo", Util.getStringFromHash(playListItem,"playListNo"));
             param.put("keyword", keyword );
 
-            new HttpPostAsyncTask( this, url, REQUEST_SEARCH_MY_SONG ).execute(param);
+            new HttpPostAsyncTask( this, url, REQUEST_SEARCH_PLAYLIST_SONG ).execute(param);
 
         }
         else{
@@ -127,7 +141,7 @@ public class SearchActivity extends BaseActivity
 
             if ( "0000".equals( response.getResCode() ) )
             {
-                if ( requestCode == REQUEST_SEARCH_MY_SONG ) {
+                if ( requestCode == REQUEST_SEARCH_PLAYLIST_SONG ) {
                     HashMap data = (HashMap) response.getData();
                     if ( data.containsKey("songList") && data.get("songList") != null ) {
                         List<HashMap> songList = (List<HashMap>) data.get("songList");
@@ -194,13 +208,20 @@ public class SearchActivity extends BaseActivity
         if ( bExistsVideoID == false ) {
 
             Intent intent = new Intent(this, SearchResultActivity.class);
-            intent.putExtra("item", item);
+            if ( !Util.isEmptyForKey(item, "itemNo") ) {
+                intent.putExtra("item", item);
+                intent.putExtra("playListItem", item);
+            }
+            else
+                intent.putExtra("item", item);
+
+            intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_ACTIVITY );
             startActivity(intent);
 
         } else {
             Intent intent = new Intent( this, FullscreenPlayerActivity.class);
             intent.putExtra("playListItem", item);
-            intent.putExtra("playFrom", Constants.PLAY_FROM_PLAYLIST );
+            intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_ACTIVITY );
             startActivity(intent);
         }
 
@@ -215,6 +236,14 @@ public class SearchActivity extends BaseActivity
     private void addSong(String title) throws Exception{
 
         if (!Util.isEmptyString(title)) {
+
+            playListItem = (HashMap) getIntent().getExtras().get("playListItem");
+
+            HashMap defaultMap = application.getDefaultHashMap();
+            String tempUserNo = Util.getStringFromHash(defaultMap,"tempUserNo");
+            if ( !tempUserNo.equals( Util.getStringFromHash(playListItem, "tempUserNo") )){
+                return;
+            }
 
             String url = Constants.getServerURL("/playlistItem/add.do");
             HashMap param = application.getDefaultHashMap();
@@ -250,7 +279,7 @@ public class SearchActivity extends BaseActivity
     public void showGuideDialog(final String title){
 
         // custom dialog
-        final Dialog dialog = new Dialog( this );
+        final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
         dialog.setContentView(R.layout.dialog_playlist_basic_guide);
 
         Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);

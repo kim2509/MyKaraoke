@@ -124,7 +124,6 @@ public class SongSearchFragment extends BaseFragment
 
             super.onResume();
 
-            /*
             // 현재 play mode 설정
             String playMode = application.getMetaInfoString(Constants.PREF_PLAY_MODE);
             Spinner spinnerPlayMode = (Spinner) rootView.findViewById(R.id.spinnerPlayMode);
@@ -133,7 +132,7 @@ public class SongSearchFragment extends BaseFragment
                     spinnerPlayMode.setSelection(i);
                 }
             }
-            */
+
         } catch( Exception ex ){
             application.showToastMessage(ex);
         }
@@ -320,7 +319,7 @@ public class SongSearchFragment extends BaseFragment
     public void showGuideDialog(){
 
         // custom dialog
-        final Dialog dialog = new Dialog( getActivity() );
+        final Dialog dialog = new Dialog( getActivity(), R.style.noTitleTheme );
         dialog.setCancelable(false);
         dialog.setContentView(R.layout.dialog_terms_agree);
 

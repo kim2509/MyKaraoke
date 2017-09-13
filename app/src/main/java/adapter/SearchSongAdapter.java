@@ -11,6 +11,8 @@ import android.widget.TextView;
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.display.RoundedBitmapDisplayer;
+import com.tessoft.mykaraoke.Constants;
+import com.tessoft.mykaraoke.KaraokeApplication;
 import com.tessoft.mykaraoke.R;
 import com.tessoft.mykaraoke.Util;
 
@@ -23,8 +25,9 @@ public class SearchSongAdapter extends ArrayAdapter<HashMap> {
 
     LayoutInflater inflater = null;
     DisplayImageOptions options = null;
+    KaraokeApplication application = null;
 
-    public SearchSongAdapter(Context context, int textViewResourceId) {
+    public SearchSongAdapter(Context context, int textViewResourceId, KaraokeApplication application) {
         super(context, textViewResourceId);
         inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -37,6 +40,8 @@ public class SearchSongAdapter extends ArrayAdapter<HashMap> {
                 .displayer(new RoundedBitmapDisplayer(20))
                 .delayBeforeLoading(100)
                 .build();
+
+        this.application = application;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -46,7 +51,6 @@ public class SearchSongAdapter extends ArrayAdapter<HashMap> {
 
         try {
             HashMap item = getItem(position);
-            String url = Util.getStringFromHash(item, "url");
 
             if (row == null) {
                 row = inflater.inflate(R.layout.search_result_item, parent, false);
@@ -61,7 +65,14 @@ public class SearchSongAdapter extends ArrayAdapter<HashMap> {
             viewHolder.item = item;
             viewHolder.txtTitle.setText(Util.getStringFromHash(item, "title"));
 
-            if ( !Util.isEmptyForKey(item,"url")) {
+            String url = "";
+
+            if ( "뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
+                url = Util.getStringFromHash(item,"thumbnailURL2");
+            else
+                url = Util.getStringFromHash(item,"thumbnailURL1");
+
+            if ( !Util.isEmptyString(url)) {
                 ImageLoader.getInstance().displayImage( url, viewHolder.thumbNailView, options);
             } else {
                 ImageLoader.getInstance().cancelDisplayTask(viewHolder.thumbNailView);

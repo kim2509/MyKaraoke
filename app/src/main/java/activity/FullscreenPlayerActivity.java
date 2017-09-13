@@ -46,6 +46,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public KaraokeApplication application = null;
     int REQUEST_UPDATE_PLAYLIST_ITEM = 1;
     public String PLAY_FROM = "";
+    public String REFERRER = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +75,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public void showGuideDialog(){
 
         // custom dialog
-        final Dialog dialog = new Dialog( this );
+        final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
         dialog.setContentView(R.layout.dialog_data_warning_guide);
 
         Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
@@ -85,8 +86,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 try {
 
                     CheckBox chkShow = (CheckBox) dialog.findViewById(R.id.chkShow);
-                    if ( chkShow.isChecked() )
-                        application.setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "Y");
+                    if (chkShow.isChecked())
+                        application.setMetaInfo(Constants.GUIDE_DO_NOT_DATA_WARNING, "Y");
                     dialog.dismiss();
 
                     // Initializing YouTube player view
@@ -105,6 +106,9 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     private void initializeToolbarButton() {
         if ( getIntent().getExtras().containsKey("playFrom") ) {
             PLAY_FROM = getIntent().getExtras().getString("playFrom");
+            if ( getIntent().getExtras().containsKey( Constants.REFERRER ))
+                REFERRER = getIntent().getExtras().getString(Constants.REFERRER);
+
             if ( PLAY_FROM.equals( Constants.PLAY_FROM_POPULAR_MV_LIST ) ||
                     PLAY_FROM.equals( Constants.PLAY_FROM_POPULAR_SONG_LIST ) ) {
                 findViewById(R.id.btnChangePlayMode).setVisibility(ViewGroup.GONE);
@@ -112,13 +116,18 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 findViewById(R.id.btnShuffle).setVisibility(ViewGroup.GONE);
             } else if ( PLAY_FROM.equals( Constants.PLAY_FROM_SEARCH_FRAGMENT ) ||
                     PLAY_FROM.equals( Constants.PLAY_FROM_SEARCH_RESULT ) ) {
-                if ( !getIntent().getExtras().containsKey("playListItem")) {
+                if ( !REFERRER.equals( Constants.PLAY_FROM_PLAYLIST )) {
                     findViewById(R.id.btnChangePlayMode).setVisibility(ViewGroup.GONE);
                     findViewById(R.id.btnShowInfo).setVisibility(ViewGroup.GONE);
                     findViewById(R.id.btnShuffle).setVisibility(ViewGroup.GONE);
                     findViewById(R.id.btnPlayNext).setVisibility(ViewGroup.GONE);
                     findViewById(R.id.btnPlayPrevious).setVisibility(ViewGroup.GONE);
                 }
+            } else if ( PLAY_FROM.equals( Constants.PLAY_FROM_SEARCH_ACTIVITY  ) ) {
+                findViewById(R.id.btnChangePlayMode).setVisibility(ViewGroup.GONE);
+                findViewById(R.id.btnShuffle).setVisibility(ViewGroup.GONE);
+                findViewById(R.id.btnPlayNext).setVisibility(ViewGroup.GONE);
+                findViewById(R.id.btnPlayPrevious).setVisibility(ViewGroup.GONE);
             }
         }
     }
@@ -259,7 +268,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     }
 
     private void sendBroadcastForPlayNext() {
-        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM )){
+        if ( PLAY_FROM.equals( Constants.PLAY_FROM_PLAYLIST ) ||
+                REFERRER.equals( Constants.PLAY_FROM_PLAYLIST )) {
             Intent intent = new Intent("PLAY_NEXT_SONG");
             sendBroadcast(intent);
         } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
@@ -272,7 +282,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     }
 
     private void sendBroadcastForPlayPrevious() {
-        if ( Constants.PLAY_FROM_PLAYLIST.equals( PLAY_FROM )){
+        if ( PLAY_FROM.equals( Constants.PLAY_FROM_PLAYLIST ) ||
+                REFERRER.equals( Constants.PLAY_FROM_PLAYLIST )) {
             Intent intent = new Intent("PLAY_PREVIOUS_SONG");
             sendBroadcast(intent);
         } else if ( Constants.PLAY_FROM_POPULAR_MV_LIST.equals( PLAY_FROM ) ){
@@ -320,13 +331,11 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void updateItemVideoID() throws Exception{
 
-        if ( getIntent() != null && getIntent().getExtras() != null ) {
-            if ( getIntent().getExtras().containsKey("playListItem")){
-                updateVideoID();
-            }
-            else if ( getIntent().getExtras().containsKey("songItem")) {
-                updatePlayHistory();
-            }
+        if ( PLAY_FROM.equals( Constants.PLAY_FROM_PLAYLIST ) ||
+                REFERRER.equals( Constants.PLAY_FROM_PLAYLIST ))
+            updateVideoID();
+        else if ( getIntent().getExtras().containsKey("songItem")) {
+            updatePlayHistory();
         }
     }
 
@@ -472,7 +481,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
     public void mode(View v)
     {
-        final CharSequence[] items = {"뮤직비디오", "금영", "태진", "노래방"};
+        final CharSequence[] items = getResources().getStringArray(R.array.play_mode_array);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("재생모드를 선택해 주세요.");

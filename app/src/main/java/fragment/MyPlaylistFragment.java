@@ -255,7 +255,7 @@ public class MyPlaylistFragment extends BaseFragment
         try{
 
             // custom dialog
-            final Dialog dialog = new Dialog( getActivity() );
+            final Dialog dialog = new Dialog( getActivity(), R.style.noTitleTheme );
             dialog.setContentView(R.layout.dialog_add_playlist);
             dialog.setTitle("재생목록 생성");
 

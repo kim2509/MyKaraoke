@@ -27,9 +27,15 @@ public class Constants {
 
     public static String PREF_PLAY_MODE = "play_mode";
 
+    // 1단계
+    public static String PLAY_FROM  = "playFrom";
+    // 2단계
+    public static String REFERRER  = "REFERRER";
+
     public static String PLAY_FROM_POPULAR_MV_LIST = "PLAY_FROM_POPULAR_MV_LIST";
     public static String PLAY_FROM_POPULAR_SONG_LIST = "PLAY_FROM_POPULAR_SONG_LIST";
     public static String PLAY_FROM_PLAYLIST = "PLAY_FROM_PLAYLIST";
+    public static String PLAY_FROM_SEARCH_ACTIVITY = "PLAY_FROM_SEARCH_ACTIVITY";
     public static String PLAY_FROM_SEARCH_RESULT = "PLAY_FROM_SEARCH_RESULT";
     public static String PLAY_FROM_SEARCH_FRAGMENT = "PLAY_FROM_SEARCH_FRAGMENT";
 

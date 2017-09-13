@@ -261,7 +261,7 @@ public class PlayListMainActivity extends BaseActivity
     public void showGuideDialog(){
 
         // custom dialog
-        final Dialog dialog = new Dialog( this );
+        final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
         dialog.setContentView(R.layout.dialog_playmode_guide);
 
         TextView txtGuide = (TextView) dialog.findViewById(R.id.txtGuide);
@@ -359,6 +359,7 @@ public class PlayListMainActivity extends BaseActivity
             Intent intent = new Intent(this, SearchResultActivity.class);
             intent.putExtra("item", item);
             intent.putExtra("playListItem", item);
+            intent.putExtra("playFrom", Constants.PLAY_FROM_PLAYLIST );
             startActivity(intent);
 
         } else {
@@ -461,7 +462,7 @@ public class PlayListMainActivity extends BaseActivity
 
                 Intent intent = new Intent(this, SearchActivity.class);
                 if ( playListItem != null )
-                    intent.putExtra("playListNo", Util.getStringFromHash( playListItem, "playListNo"));
+                    intent.putExtra("playListItem", playListItem );
 
                 startActivity(intent);
 
@@ -488,7 +489,7 @@ public class PlayListMainActivity extends BaseActivity
         try{
 
             // custom dialog
-            final Dialog dialog = new Dialog( this );
+            final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
             dialog.setContentView(R.layout.dialog_share);
             dialog.setTitle("공유");
 

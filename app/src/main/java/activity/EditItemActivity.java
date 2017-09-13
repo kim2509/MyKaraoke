@@ -250,7 +250,7 @@ public class EditItemActivity extends BaseActivity {
 
     private void showPlayListSelectDialog(final int mode) {
         // custom dialog
-        final Dialog dialog = new Dialog( this );
+        final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
         dialog.setContentView(R.layout.dialog_change_playlist);
 
         Spinner spinnerPlayList = (Spinner) dialog.findViewById(R.id.spinnerPlayList);
