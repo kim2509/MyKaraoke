@@ -38,7 +38,7 @@ public class KaraokeApplication extends Application {
             initializeGlobalPreferences();
 
             // 어드민 환경설정 로딩
-            checkIfAdminUser();
+//            checkIfAdminUser();
 
             // Universal image loader 초기화
             initializeUniversalImageLoader();
