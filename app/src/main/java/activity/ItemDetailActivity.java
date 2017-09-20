@@ -27,6 +27,8 @@ public class ItemDetailActivity extends BaseActivity {
     int REQUEST_RESET_KARAOKE_LINK = 100;
     int REQUEST_RESET_MV_LINK = 101;
 
+    boolean bEditableItem = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,8 +79,14 @@ public class ItemDetailActivity extends BaseActivity {
                     HashMap data = (HashMap) response.getData();
                     if ( data.get("itemInfo") != null ) {
                         item = (HashMap) data.get("itemInfo");
+
+                        if ( "Y".equals( Util.getStringFromHash(data, "editableYN"))) {
+                            bEditableItem = true;
+                        }
+
                         displaySongInfo();
                     }
+
                 }
                 else if ( requestCode == REQUEST_UPDATE_ITEM ) {
                     showOKDialog("수정되었습니다", null );
@@ -116,8 +124,11 @@ public class ItemDetailActivity extends BaseActivity {
         TextView txtKaraokeLink2 = (TextView) findViewById(R.id.txtKaraokeLink2);
         txtKaraokeLink2.setText( videoID1 );
         if ( !Util.isEmptyString(videoID1)) {
-            findViewById(R.id.btnResetKaraokeLink).setVisibility(ViewGroup.VISIBLE);
-            findViewById(R.id.btnPlayKaraokeLink).setVisibility(ViewGroup.VISIBLE);
+
+            if ( bEditableItem ) {
+                findViewById(R.id.btnResetKaraokeLink).setVisibility(ViewGroup.VISIBLE);
+                findViewById(R.id.btnPlayKaraokeLink).setVisibility(ViewGroup.VISIBLE);
+            }
         }
         else {
             txtKaraokeLink2.setText("미설정");
@@ -128,8 +139,10 @@ public class ItemDetailActivity extends BaseActivity {
         TextView txtMVLink2 = (TextView) findViewById(R.id.txtMVLink2);
         txtMVLink2.setText( videoID2 );
         if ( !Util.isEmptyString(videoID2)) {
-            findViewById(R.id.btnResetMVLink).setVisibility(ViewGroup.VISIBLE);
-            findViewById(R.id.btnPlayMVLink).setVisibility(ViewGroup.VISIBLE);
+            if ( bEditableItem ) {
+                findViewById(R.id.btnResetMVLink).setVisibility(ViewGroup.VISIBLE);
+                findViewById(R.id.btnPlayMVLink).setVisibility(ViewGroup.VISIBLE);
+            }
         }
         else {
             txtMVLink2.setText( "미설정" );

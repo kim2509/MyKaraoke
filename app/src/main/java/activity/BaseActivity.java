@@ -19,6 +19,9 @@ public class BaseActivity extends AppCompatActivity implements TransactionDelega
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         application = (KaraokeApplication) getApplication();
+
+        // 어드민 환경설정 로딩
+        application.checkIfAdminUser();
     }
 
     public void showOKDialog(String message, final Object param) {

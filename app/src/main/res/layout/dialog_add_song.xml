@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:id="@+id/titleBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#3E4EB0">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:text="노래 추가"
+            android:textColor="#ffffff"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginLeft="10dp"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ffffff"
+        android:paddingTop="20dp"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingBottom="10dp"
+        android:layout_below="@+id/titleBar">
+
+        <TextView
+            android:id="@+id/txtName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="노래제목"
+            android:textSize="18sp"/>
+
+        <EditText
+            android:id="@+id/edtSongTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignBaseline="@+id/txtName"
+            android:hint="노래 제목을 입력하세요."
+            android:inputType="text"
+            android:imeOptions="actionNext"/>
+
+        <TextView
+            android:id="@+id/txtSinger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="가수"
+            android:layout_below="@+id/txtName"
+            android:layout_marginTop="20dp"
+            android:textSize="18sp"/>
+
+        <EditText
+            android:id="@+id/edtSinger"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignBaseline="@+id/txtSinger"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:hint="가수명을 입력하세요."/>
+
+        <TextView
+            android:id="@+id/txtGuide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="가수명을 입력하면 검색시에 정확도가 올라갑니다."
+            android:layout_below="@+id/txtSinger"
+            android:layout_marginTop="20dp"
+            android:textColor="#0000ee"
+            android:textSize="16sp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/txtGuide"
+            android:layout_marginTop="20dp"
+            android:gravity="center_horizontal">
+
+            <Button
+                android:id="@+id/dialogButtonOK"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="추가"/>
+
+            <Button
+                android:id="@+id/dialogButtonAdd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="계속 추가"/>
+
+            <Button
+                android:id="@+id/dialogButtonCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="닫기"/>
+
+        </LinearLayout>
+
+
+    </RelativeLayout>
+</RelativeLayout>

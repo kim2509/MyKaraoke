@@ -193,7 +193,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             else if ( getIntent().getExtras().get("playListItem") != null ) {
                 HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
                 String videoID = "";
-                if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+                if ( Constants.PLAY_MODE_MUSIC.equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     videoID = Util.getStringFromHash(playListItem, "videoID2");
                 } else {
                     videoID = Util.getStringFromHash(playListItem, "videoID1");
@@ -332,7 +332,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
     public void updateItemVideoID() throws Exception{
 
         if ( PLAY_FROM.equals( Constants.PLAY_FROM_PLAYLIST ) ||
-                REFERRER.equals( Constants.PLAY_FROM_PLAYLIST ))
+                REFERRER.equals( Constants.PLAY_FROM_PLAYLIST ) || REFERRER.equals( Constants.PLAY_FROM_SEARCH_ACTIVITY ))
             updateVideoID();
         else if ( getIntent().getExtras().containsKey("songItem")) {
             updatePlayHistory();
@@ -349,7 +349,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
                 String videoID = Util.getStringFromHash(songItem, "videoID");
 
-                if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+                if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     playListItem.put("videoID2", videoID);
                 } else {
                     playListItem.put("videoID1", videoID);
@@ -359,7 +359,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 playListItem.put("thumbnailURL", thumbnailURL);
             }
 
-            if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+            if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                 playListItem.put("type", "2");
             } else {
                 playListItem.put("type", "1");
@@ -381,7 +381,7 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
 
-            if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+            if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                 songItem.put("type", "2");
             } else {
                 songItem.put("type", "1");

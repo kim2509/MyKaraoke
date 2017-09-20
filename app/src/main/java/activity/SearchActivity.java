@@ -73,6 +73,9 @@ public class SearchActivity extends BaseActivity
         txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
         txtSongTitle.addTextChangedListener(this);
         txtSongTitle.setOnEditorActionListener(this);
+
+        EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
+        edtSinger.addTextChangedListener(this);
     }
 
     @Override
@@ -90,7 +93,9 @@ public class SearchActivity extends BaseActivity
 
         try {
 
-            searchSongInPlayList(s.toString());
+            EditText txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
+            EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
+            searchSongInPlayList( txtSongTitle.getText().toString(), edtSinger.getText().toString() );
 
         } catch ( Exception ex ) {
             application.showToastMessage(ex.getMessage());
@@ -103,14 +108,15 @@ public class SearchActivity extends BaseActivity
 
         try {
             EditText txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
-            searchSongInPlayList( txtSongTitle.getText().toString() );
+            EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
+            searchSongInPlayList( txtSongTitle.getText().toString(), edtSinger.getText().toString() );
 
         } catch ( Exception ex ) {
             application.showToastMessage(ex.getMessage());
         }
     }
 
-    private void searchSongInPlayList( String keyword ) throws Exception {
+    private void searchSongInPlayList( String keyword, String singer ) throws Exception {
 
         if ( !Util.isEmptyString(keyword) ) {
 
@@ -119,6 +125,7 @@ public class SearchActivity extends BaseActivity
 
             param.put("playListNo", Util.getStringFromHash(playListItem,"playListNo"));
             param.put("keyword", keyword );
+            param.put("singer", singer );
 
             new HttpPostAsyncTask( this, url, REQUEST_SEARCH_PLAYLIST_SONG ).execute(param);
 
@@ -163,6 +170,8 @@ public class SearchActivity extends BaseActivity
                     if ( data.get("song") != null ) {
                         HashMap item = (HashMap) data.get("song");
                         Intent intent = new Intent(this, SearchResultActivity.class);
+                        intent.putExtra( Constants.PLAY_FROM, Constants.PLAY_FROM_SEARCH_ACTIVITY);
+                        intent.putExtra("playListItem", item);
                         intent.putExtra("item", item);
                         startActivity(intent);
                     }
@@ -199,7 +208,7 @@ public class SearchActivity extends BaseActivity
 
         boolean bExistsVideoID = false;
 
-        if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+        if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
@@ -233,7 +242,7 @@ public class SearchActivity extends BaseActivity
         return false;
     }
 
-    private void addSong(String title) throws Exception{
+    private void addSong(String title, String singer) throws Exception{
 
         if (!Util.isEmptyString(title)) {
 
@@ -248,11 +257,9 @@ public class SearchActivity extends BaseActivity
             String url = Constants.getServerURL("/playlistItem/add.do");
             HashMap param = application.getDefaultHashMap();
 
-            if ( getIntent() != null && getIntent().getExtras() != null && getIntent().getExtras().containsKey("playListNo") &&
-                    !Util.isEmptyString( getIntent().getExtras().getString("playListNo")))
-                param.put("playListNo", getIntent().getExtras().getString("playListNo"));
-
+            param.put("playListNo", Util.getStringFromHash( playListItem, "playListNo"));
             param.put("title", title);
+            param.put("singer", singer);
 
             new HttpPostAsyncTask( this, url, REQUEST_ADD_SONG_TO_PLAYLIST ).execute(param);
         }
@@ -263,20 +270,22 @@ public class SearchActivity extends BaseActivity
         try {
 
             EditText txtSongTitle = (EditText) findViewById(R.id.txtSongTitle);
+            EditText edtSinger = (EditText) findViewById(R.id.edtSinger);
 
             String title = txtSongTitle.getText().toString();
+            String singer = edtSinger.getText().toString();
 
             if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE )))
-                showGuideDialog(title);
+                showGuideDialog(title, singer);
             else
-                addSong(title);
+                addSong(title, singer);
 
         } catch( Exception ex ) {
             application.showToastMessage(ex);
         }
     }
 
-    public void showGuideDialog(final String title){
+    public void showGuideDialog(final String title, final String singer){
 
         // custom dialog
         final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
@@ -294,7 +303,7 @@ public class SearchActivity extends BaseActivity
                         application.setMetaInfo( Constants.GUIDE_DO_NOT_SHOW_BASIC_PLAYLIST_SAVE, "Y");
                     dialog.dismiss();
 
-                    addSong(title);
+                    addSong(title, singer);
 
                 } catch (Exception ex) {
                     application.showToastMessage(ex.getMessage());

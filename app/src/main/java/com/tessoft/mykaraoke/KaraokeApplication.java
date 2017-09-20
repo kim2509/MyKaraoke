@@ -37,9 +37,6 @@ public class KaraokeApplication extends Application {
             // 초기 환경변수 셋팅
             initializeGlobalPreferences();
 
-            // 어드민 환경설정 로딩
-//            checkIfAdminUser();
-
             // Universal image loader 초기화
             initializeUniversalImageLoader();
         }
@@ -50,8 +47,10 @@ public class KaraokeApplication extends Application {
 
     private void initializeGlobalPreferences()
     {
-        if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )))
-            setMetaInfo( Constants.PREF_PLAY_MODE, "뮤직비디오");
+        // 재생모드가 공백이거나 뮤직비디오일때 뮤직으로 셋팅
+        if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )) ||
+                Constants.PLAY_MODE_MUSIC.equals( getMetaInfoString( Constants.PREF_PLAY_MODE)))
+            setMetaInfo( Constants.PREF_PLAY_MODE, Constants.PLAY_MODE_MUSIC);
 
 //        setMetaInfo( Constants.AGREE_TERMS, "" );
 //        setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "" );
@@ -125,6 +124,8 @@ public class KaraokeApplication extends Application {
                     server = value.trim();
                 else if ( "tempUserNo".equals( key ) )
                     tempUserNo = value.trim();
+                else if ( "devIP".equals( key ) )
+                    Constants.devIP = value.trim();
             }
 
             if ( "REAL".equals( server ) )

@@ -57,7 +57,11 @@ public class SearchResultActivity extends BaseActivity
                 item = (HashMap) getIntent().getExtras().get("item");
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
-                title += " " + singer + " " + application.getMetaInfoString(Constants.PREF_PLAY_MODE);
+                title += " " + singer;
+                if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
+                    title += " " + Constants.PLAY_MODE_MUSIC;
+                else
+                    title += " " + application.getMetaInfoString(Constants.PREF_PLAY_MODE);
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");
                 HashMap param = application.getDefaultHashMap();
@@ -114,8 +118,6 @@ public class SearchResultActivity extends BaseActivity
 
                     TimerTask updateSecond = new UpdateSecond();
                     timer.scheduleAtFixedRate(updateSecond, 0, 1000);
-//                    listSearch.setSelection(0);
-//                    listSearch.getSelectedView().setSelected(true);
                 }
             }
             else

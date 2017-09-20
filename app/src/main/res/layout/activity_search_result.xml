@@ -30,7 +30,7 @@
             android:id="@+id/txtSecond"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="6"
+            android:text="11"
             android:textColor="#ffffff"
             android:background="#4d06e7"
             android:paddingLeft="5dp"

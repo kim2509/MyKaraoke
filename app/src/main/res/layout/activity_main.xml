@@ -79,8 +79,24 @@
             android:textSize="18sp"
             android:textColor="#ff4900"
             android:textStyle="bold"
-            android:text="저장된 곡이 없습니다.\n\n상단의 검색아이콘으로 노래를 검색하시면\n\n자동으로 곡이 추가됩니다."
+            android:text="저장된 곡이 없습니다.\n\n우측 하단의 + 버튼으로 곡을 추가하십시오."
             android:visibility="gone"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/btnAddSong"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/img_add"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="60dp"
             />
     </RelativeLayout>
 

@@ -15,6 +15,7 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -45,7 +46,7 @@ import adapter.SongArrayAdapter;
 import adapter.SongViewHolder;
 
 public class PlayListMainActivity extends BaseActivity
-        implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener
+        implements AdapterView.OnItemClickListener, AdapterView.OnItemSelectedListener, OnClickListener
 {
 
     ListView listRecentSearch = null;
@@ -57,6 +58,7 @@ public class PlayListMainActivity extends BaseActivity
     int REQUEST_LOAD_PLAYLIST_SONG = 2;
     int REQUEST_DELETE_ITEM = 3;
     int REQUEST_UNSHARE_PLAYLIST = 4;
+    int REQUEST_ADD_SONG_TO_PLAYLIST = 5;
 
     int REQUEST_CONFIRM_DELETE = 100;
     int REQUEST_CONFIRM_UNSHARE = 101;
@@ -120,6 +122,16 @@ public class PlayListMainActivity extends BaseActivity
 
             if ( !"Y".equals( application.getMetaInfoString( Constants.GUIDE_DO_NOT_PLAY_MODE )))
                 showGuideDialog();
+
+            String tempUserNo = Util.getStringFromHash( playListItem, "tempUserNo");
+            HashMap defaultMap = application.getDefaultHashMap();
+            if ( Util.getStringFromHash( defaultMap, "tempUserNo").equals( tempUserNo )) {
+                Button btn = (Button) findViewById(R.id.btnAddSong);
+                btn.setVisibility(ViewGroup.VISIBLE);
+                btn.setOnClickListener(this);
+            } else {
+                findViewById(R.id.btnAddSong).setVisibility(ViewGroup.GONE);
+            }
         }
         catch(Exception ex )
         {
@@ -265,14 +277,14 @@ public class PlayListMainActivity extends BaseActivity
         dialog.setContentView(R.layout.dialog_playmode_guide);
 
         TextView txtGuide = (TextView) dialog.findViewById(R.id.txtGuide);
-        if ( "뮤직비디오".equals( application.getMetaInfoString( Constants.PREF_PLAY_MODE ) ) )
-            txtGuide.setText("뮤직비디오모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
+        if ( Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) )
+            txtGuide.setText("뮤직모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
         else
-            txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 뮤직비디오로 변경하실수 있습니다.");
+            txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 뮤직모드로 변경하실수 있습니다.");
 
         Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
         // if button is clicked, close the custom dialog
-        dialogButton.setOnClickListener(new View.OnClickListener() {
+        dialogButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
@@ -290,7 +302,7 @@ public class PlayListMainActivity extends BaseActivity
 
         Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
         // if button is clicked, close the custom dialog
-        dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+        dialogButtonCancel.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 dialog.dismiss();
@@ -329,9 +341,9 @@ public class PlayListMainActivity extends BaseActivity
             listRecentSearch.smoothScrollToPosition(selectedItemIndex + 1);
 
             listRecentSearch.performItemClick(
-                    listRecentSearch.getAdapter().getView(selectedItemIndex+1, null, null),
+                    listRecentSearch.getAdapter().getView(selectedItemIndex + 1, null, null),
                     selectedItemIndex + 1,
-                    listRecentSearch.getAdapter().getItemId(selectedItemIndex+1));
+                    listRecentSearch.getAdapter().getItemId(selectedItemIndex + 1));
         }
 //        else
 //        {
@@ -348,7 +360,7 @@ public class PlayListMainActivity extends BaseActivity
 
         boolean bExistsVideoID = false;
 
-        if ("뮤직비디오".equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+        if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
@@ -498,7 +510,7 @@ public class PlayListMainActivity extends BaseActivity
 
             Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
             // if button is clicked, close the custom dialog
-            dialogButton.setOnClickListener(new View.OnClickListener() {
+            dialogButton.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     try {
@@ -510,7 +522,7 @@ public class PlayListMainActivity extends BaseActivity
                         }
 
                         dialog.dismiss();
-                        sharePlayList( edtPlayListName.getText().toString() );
+                        sharePlayList(edtPlayListName.getText().toString());
                     } catch (Exception ex) {
                         application.showToastMessage(ex.getMessage());
                     }
@@ -519,7 +531,7 @@ public class PlayListMainActivity extends BaseActivity
 
             Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
             // if button is clicked, close the custom dialog
-            dialogButtonCancel.setOnClickListener(new View.OnClickListener() {
+            dialogButtonCancel.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     dialog.dismiss();
@@ -623,6 +635,8 @@ public class PlayListMainActivity extends BaseActivity
                         playListItem = (HashMap) data.get("item");
                     }
                     showOKDialog("알림", "공유가 해제되었습니다.", null);
+                } else if ( requestCode == REQUEST_ADD_SONG_TO_PLAYLIST ) {
+                    loadPlayListSongs();
                 }
             }
             else
@@ -822,12 +836,88 @@ public class PlayListMainActivity extends BaseActivity
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        TextView textView = (TextView) view;
-        application.setMetaInfo( Constants.PREF_PLAY_MODE, textView.getText().toString() );
+        if ( view != null ) {
+            TextView textView = (TextView) view;
+            application.setMetaInfo(Constants.PREF_PLAY_MODE, textView.getText().toString());
+        }
     }
 
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        try {
+            if ( v.getId() == R.id.btnAddSong ) {
+                showAddSongDialog();
+            }
+            else if ( v.getId() == R.id.dialogButtonOK || v.getId() == R.id.dialogButtonAdd ) {
+
+                Dialog dialog = (Dialog) v.getTag();
+                EditText edtSongTitle = (EditText) dialog.findViewById(R.id.edtSongTitle);
+
+                if (Util.isEmptyString(edtSongTitle.getText())) {
+                    edtSongTitle.setError("노래제목을 입력해 주십시오.");
+                    return;
+                }
+
+                EditText edtSinger = (EditText) dialog.findViewById(R.id.edtSinger);
+                addSong(edtSongTitle.getText().toString(), edtSinger.getText().toString());
+
+                edtSongTitle.setText("");
+                edtSinger.setText("");
+
+                if ( v.getId() == R.id.dialogButtonOK )
+                    dialog.dismiss();
+                else {
+                    edtSongTitle.requestFocus();
+                }
+
+            }
+        } catch ( Exception ex ) {
+            application.showToastMessage(ex);
+        }
+    }
+
+    public void showAddSongDialog(){
+
+        // custom dialog
+        final Dialog dialog = new Dialog( this, R.style.noTitleTheme );
+        dialog.setContentView(R.layout.dialog_add_song);
+        dialog.setCancelable(false);
+
+        Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
+        Button dialogButtonAdd = (Button) dialog.findViewById(R.id.dialogButtonAdd);
+        // if button is clicked, close the custom dialog
+        dialogButton.setOnClickListener( this );
+        dialogButtonAdd.setOnClickListener(this);
+        dialogButton.setTag(dialog);
+        dialogButtonAdd.setTag( dialog );
+
+        Button dialogButtonCancel = (Button) dialog.findViewById(R.id.dialogButtonCancel);
+        // if button is clicked, close the custom dialog
+        dialogButtonCancel.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.show();
+    }
+
+    public void addSong( String title, String singer ) throws Exception{
+
+        String url = Constants.getServerURL("/playlistItem/add.do");
+        HashMap param = application.getDefaultHashMap();
+
+        param.put("playListNo", Util.getStringFromHash( playListItem, "playListNo"));
+        param.put("title", title);
+        param.put("singer", singer);
+
+        new HttpPostAsyncTask( this, url, REQUEST_ADD_SONG_TO_PLAYLIST ).execute(param);
 
     }
 }

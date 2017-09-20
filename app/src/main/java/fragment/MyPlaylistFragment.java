@@ -98,7 +98,7 @@ public class MyPlaylistFragment extends BaseFragment
 
             list = (ListView) rootView.findViewById(R.id.list);
             list.setOnItemClickListener(this);
-            adapter = new PlayListAdapter(getActivity(), 0);
+            adapter = new PlayListAdapter(getActivity(), 0, 2);
 
             setListHeader();
 

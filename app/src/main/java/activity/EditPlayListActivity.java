@@ -118,7 +118,7 @@ public class EditPlayListActivity extends BaseActivity {
 
         try {
             //noinspection SimplifiableIfStatement
-            if (id == R.id.save) {
+            if (id == R.id.menu_edit) {
 
                 saveItem();
 

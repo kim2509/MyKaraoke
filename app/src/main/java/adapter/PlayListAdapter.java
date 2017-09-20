@@ -19,9 +19,12 @@ public class PlayListAdapter extends ArrayAdapter<HashMap> {
 
     LayoutInflater inflater = null;
 
-    public PlayListAdapter(Context context, int textViewResourceId) {
+    int from = 0;
+
+    public PlayListAdapter(Context context, int textViewResourceId, int from ) {
         super(context, textViewResourceId);
         inflater = (LayoutInflater) this.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.from = from;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -61,11 +64,24 @@ public class PlayListAdapter extends ArrayAdapter<HashMap> {
             else
                 viewHolder.txtItemCount.setText( "곡 수 : " + Util.getStringFromHash(item, "itemCount") );
 
-            if ( !Util.isEmptyString(Util.getStringFromHash(item, "createdDate"))){
-                long time = Long.parseLong( Util.getStringFromHash(item, "createdDate") );
-                viewHolder.txtCreatedDate.setText( Util.getFormattedDateString( time, "yyyy-MM-dd"));
-            } else {
-                viewHolder.txtCreatedDate.setText("");
+            if ( from == 1 ) {
+                if ( !Util.isEmptyString(Util.getStringFromHash(item, "shareDate"))){
+                    long time = Long.parseLong( Util.getStringFromHash(item, "shareDate") );
+                    viewHolder.txtCreatedDate.setText( Util.getFormattedDateString( time, "yyyy-MM-dd"));
+                } else {
+                    if ( !Util.isEmptyString(Util.getStringFromHash(item, "createdDate"))){
+                        long time = Long.parseLong( Util.getStringFromHash(item, "createdDate") );
+                        viewHolder.txtCreatedDate.setText( Util.getFormattedDateString( time, "yyyy-MM-dd"));
+                    }else
+                        viewHolder.txtCreatedDate.setText("");
+                }
+            } else if ( from == 2 ) {
+                if ( !Util.isEmptyString(Util.getStringFromHash(item, "createdDate"))){
+                    long time = Long.parseLong( Util.getStringFromHash(item, "createdDate") );
+                    viewHolder.txtCreatedDate.setText( Util.getFormattedDateString( time, "yyyy-MM-dd"));
+                } else {
+                    viewHolder.txtCreatedDate.setText("");
+                }
             }
 
         } catch (Exception ex) {

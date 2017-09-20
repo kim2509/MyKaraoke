@@ -77,7 +77,7 @@ public class PopularPlaylistFragment extends BaseFragment implements AdapterView
 
             list = (ListView) rootView.findViewById(R.id.list);
             list.setOnItemClickListener(this);
-            adapter = new PlayListAdapter(getActivity(), 0);
+            adapter = new PlayListAdapter(getActivity(), 0, 1);
             list.setAdapter(adapter);
 
             loadPopularList();

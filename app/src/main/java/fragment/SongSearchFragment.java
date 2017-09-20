@@ -213,7 +213,7 @@ public class SongSearchFragment extends BaseFragment
             String url = Constants.getServerURL("/song/search.do");
             HashMap param = application.getDefaultHashMap();
             param.put("keyword", keyword );
-            if ( application.getMetaInfoString(Constants.PREF_PLAY_MODE).equals("뮤직비디오")){
+            if ( application.getMetaInfoString(Constants.PREF_PLAY_MODE).equals(Constants.PLAY_MODE_MUSIC)){
                 param.put("type","2");
             } else {
                 param.put("type","1");
@@ -285,7 +285,7 @@ public class SongSearchFragment extends BaseFragment
 
     }
 
-    private void addSong(String title) throws Exception{
+    private void addSong(String title, String singer) throws Exception{
 
         if (!Util.isEmptyString(title)) {
 
@@ -293,6 +293,7 @@ public class SongSearchFragment extends BaseFragment
             HashMap param = application.getDefaultHashMap();
 
             param.put("title", title);
+            param.put("singer", singer);
 
             new HttpPostAsyncTask( this, url, REQUEST_ADD_SONG_TO_PLAYLIST ).execute(param);
         }
@@ -303,12 +304,14 @@ public class SongSearchFragment extends BaseFragment
         try {
             if ( v.getId() == R.id.btnSearch && txtSongTitle != null ) {
 
+                EditText edtSinger = (EditText) rootView.findViewById(R.id.edtSinger);
+
                 if ( !"Y".equals( application.getMetaInfoString( Constants.AGREE_TERMS )))
-                    showGuideDialog();
+                    showGuideDialog( edtSinger.getText().toString());
                 else
                 {
                     String keyword = txtSongTitle.getText().toString();
-                    addSong(keyword);
+                    addSong(keyword, edtSinger.getText().toString());
                 }
             }
         } catch( Exception ex ) {
@@ -316,7 +319,7 @@ public class SongSearchFragment extends BaseFragment
         }
     }
 
-    public void showGuideDialog(){
+    public void showGuideDialog(final String singer){
 
         // custom dialog
         final Dialog dialog = new Dialog( getActivity(), R.style.noTitleTheme );
@@ -335,7 +338,7 @@ public class SongSearchFragment extends BaseFragment
                         application.setMetaInfo(Constants.AGREE_TERMS, "Y");
                         dialog.dismiss();
                         String keyword = txtSongTitle.getText().toString();
-                        addSong(keyword);
+                        addSong(keyword, singer);
                     } else {
                         showOKDialog("경고", "약관에 동의하여 주시기 바랍니다.", null );
                     }
