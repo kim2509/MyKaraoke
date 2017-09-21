@@ -45,8 +45,8 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
         String[] titles = null;
 
         titles = new String[5];
-        titles[0] = "인기뮤비";
-        titles[1] = "인기곡";
+        titles[0] = "인기가요";
+        titles[1] = "인기노래방";
         titles[2] = "검색";
         titles[3] = "인기 재생 목록";
         titles[4] = "내 목록";

@@ -278,9 +278,9 @@ public class PlayListMainActivity extends BaseActivity
 
         TextView txtGuide = (TextView) dialog.findViewById(R.id.txtGuide);
         if ( Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) )
-            txtGuide.setText("뮤직모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
+            txtGuide.setText("가요모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
         else
-            txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 뮤직모드로 변경하실수 있습니다.");
+            txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 가요모드로 변경하실수 있습니다.");
 
         Button dialogButton = (Button) dialog.findViewById(R.id.dialogButtonOK);
         // if button is clicked, close the custom dialog
