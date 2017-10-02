@@ -373,6 +373,7 @@ public class PlayListMainActivity extends BaseActivity
             Intent intent = new Intent(this, SearchResultActivity.class);
             intent.putExtra("item", item);
             intent.putExtra("playListItem", item);
+            intent.putExtra("searchMode", application.getMetaInfoString(Constants.PREF_PLAY_MODE) );
             intent.putExtra("playFrom", Constants.PLAY_FROM_PLAYLIST );
             startActivity(intent);
 

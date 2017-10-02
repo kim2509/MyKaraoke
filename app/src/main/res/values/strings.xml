@@ -66,7 +66,6 @@
 
     <string-array name="play_mode_array">
         <item>전체</item>
-        <item>음악</item>
         <item>노래방</item>
     </string-array>
 

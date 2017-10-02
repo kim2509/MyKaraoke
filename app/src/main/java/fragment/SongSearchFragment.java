@@ -268,6 +268,11 @@ public class SongSearchFragment extends BaseFragment
                         HashMap item = (HashMap) data.get("song");
                         Intent intent = new Intent(getActivity(), SearchResultActivity.class);
                         intent.putExtra("item", item);
+
+                        Spinner spinnerPlayMode = (Spinner) rootView.findViewById(R.id.spinnerPlayMode);
+                        String searchMode = spinnerPlayMode.getSelectedItem().toString();
+                        intent.putExtra("searchMode", searchMode);
+
                         startActivity(intent);
                     }
                 }

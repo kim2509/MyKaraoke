@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -64,6 +65,16 @@ public class SearchActivity extends BaseActivity
                     txtEmptyGuide.setText("해당 검색어는 현재 재생목록에 없습니다.");
                 }
             }
+
+            // 현재 play mode 설정
+            String playMode = application.getMetaInfoString(Constants.PREF_PLAY_MODE);
+            Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
+            for ( int i = 0; i < spinnerPlayMode.getAdapter().getCount(); i++ ) {
+                if ( playMode.equals( spinnerPlayMode.getAdapter().getItem(i) )) {
+                    spinnerPlayMode.setSelection(i);
+                }
+            }
+
         } catch( Exception ex ) {
             application.showToastMessage(ex);
         }
@@ -173,6 +184,11 @@ public class SearchActivity extends BaseActivity
                         intent.putExtra( Constants.PLAY_FROM, Constants.PLAY_FROM_SEARCH_ACTIVITY);
                         intent.putExtra("playListItem", item);
                         intent.putExtra("item", item);
+
+                        Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
+                        String searchMode = spinnerPlayMode.getSelectedItem().toString();
+                        intent.putExtra("searchMode", searchMode);
+
                         startActivity(intent);
                     }
                 }
@@ -224,6 +240,10 @@ public class SearchActivity extends BaseActivity
             }
             else
                 intent.putExtra("item", item);
+
+            Spinner spinnerPlayMode = (Spinner) findViewById(R.id.spinnerPlayMode);
+            String searchMode = spinnerPlayMode.getSelectedItem().toString();
+            intent.putExtra("searchMode", searchMode);
 
             intent.putExtra("playFrom", Constants.PLAY_FROM_SEARCH_ACTIVITY );
             startActivity(intent);
