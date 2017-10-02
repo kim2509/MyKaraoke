@@ -67,7 +67,8 @@ public class SearchSongAdapter extends ArrayAdapter<HashMap> {
 
             String url = "";
 
-            if ( Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
+            if ( Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                    Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
                 url = Util.getStringFromHash(item,"thumbnailURL2");
             else
                 url = Util.getStringFromHash(item,"thumbnailURL1");

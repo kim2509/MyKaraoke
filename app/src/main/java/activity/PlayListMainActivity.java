@@ -277,7 +277,8 @@ public class PlayListMainActivity extends BaseActivity
         dialog.setContentView(R.layout.dialog_playmode_guide);
 
         TextView txtGuide = (TextView) dialog.findViewById(R.id.txtGuide);
-        if ( Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) )
+        if ( Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) )
             txtGuide.setText("가요모드로 재생됩니다.\n\n하단 툴바에서 노래방으로 변경하실수 있습니다.");
         else
             txtGuide.setText("노래방모드로 재생됩니다.\n\n하단 툴바에서 가요모드로 변경하실수 있습니다.");
@@ -360,7 +361,8 @@ public class PlayListMainActivity extends BaseActivity
 
         boolean bExistsVideoID = false;
 
-        if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+        if (Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;

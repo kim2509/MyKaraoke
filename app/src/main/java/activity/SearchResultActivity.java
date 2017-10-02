@@ -58,9 +58,8 @@ public class SearchResultActivity extends BaseActivity
                 String title = Util.getStringFromHash(item, "title");
                 String singer = Util.getStringFromHash(item, "singer");
                 title += " " + singer;
-                if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
-                    title += " " + Constants.PLAY_MODE_MUSIC;
-                else
+
+                if ( !Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)))
                     title += " " + application.getMetaInfoString(Constants.PREF_PLAY_MODE);
 
                 String url = Constants.getServerURL("/playlist/searchSong.do");

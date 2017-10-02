@@ -39,7 +39,9 @@ public class Constants {
     public static String PLAY_FROM_SEARCH_RESULT = "PLAY_FROM_SEARCH_RESULT";
     public static String PLAY_FROM_SEARCH_FRAGMENT = "PLAY_FROM_SEARCH_FRAGMENT";
 
-    public static String PLAY_MODE_MUSIC = "가요";
+    public static String PLAY_MODE_ALL = "전체";
+
+    public static String PLAY_MODE_MUSIC = "음악";
 
     public static String getServerURL( String relativePath )
     {

@@ -193,7 +193,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
             else if ( getIntent().getExtras().get("playListItem") != null ) {
                 HashMap playListItem = (HashMap) getIntent().getExtras().get("playListItem");
                 String videoID = "";
-                if ( Constants.PLAY_MODE_MUSIC.equals( application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+                if ( Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                        Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     videoID = Util.getStringFromHash(playListItem, "videoID2");
                 } else {
                     videoID = Util.getStringFromHash(playListItem, "videoID1");
@@ -211,11 +212,14 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             @Override
             public void onError(YouTubePlayer.ErrorReason arg0) {
+
+                /*
                 application.showToastMessage(arg0.toString() + " 다음곡을 재생합니다.");
 
                 finish();
 
                 sendBroadcastForPlayNext();
+                */
             }
 
             @Override
@@ -349,7 +353,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
                 String videoID = Util.getStringFromHash(songItem, "videoID");
 
-                if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+                if (Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                        Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                     playListItem.put("videoID2", videoID);
                 } else {
                     playListItem.put("videoID1", videoID);
@@ -359,7 +364,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
                 playListItem.put("thumbnailURL", thumbnailURL);
             }
 
-            if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+            if ( Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                    Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
                 playListItem.put("type", "2");
             } else {
                 playListItem.put("type", "1");
@@ -381,7 +387,8 @@ implements  com.google.android.youtube.player.YouTubePlayer.OnInitializedListene
 
             HashMap songItem = (HashMap) getIntent().getExtras().get("songItem");
 
-            if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+            if (Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                    Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE))){
                 songItem.put("type", "2");
             } else {
                 songItem.put("type", "1");

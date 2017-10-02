@@ -47,10 +47,21 @@ public class KaraokeApplication extends Application {
 
     private void initializeGlobalPreferences()
     {
-        // 재생모드가 공백이거나 뮤직비디오일때 뮤직으로 셋팅
-        if ( Util.isEmptyString( getMetaInfoString( Constants.PREF_PLAY_MODE )) ||
-                Constants.PLAY_MODE_MUSIC.equals( getMetaInfoString( Constants.PREF_PLAY_MODE)))
-            setMetaInfo( Constants.PREF_PLAY_MODE, Constants.PLAY_MODE_MUSIC);
+        String[] arPlayModes = getResources().getStringArray(R.array.play_mode_array);
+
+        boolean bFoundPlayMode = false;
+        for ( int i = 0; i < arPlayModes.length; i++ ) {
+
+            if ( getMetaInfoString( Constants.PREF_PLAY_MODE ).equals( arPlayModes[i] )) {
+                bFoundPlayMode = true;
+                break;
+            }
+        }
+
+        if ( bFoundPlayMode == false ){
+            setMetaInfo(Constants.PREF_PLAY_MODE, Constants.PLAY_MODE_ALL );
+        }
+
 
 //        setMetaInfo( Constants.AGREE_TERMS, "" );
 //        setMetaInfo( Constants.GUIDE_DO_NOT_DATA_WARNING, "" );

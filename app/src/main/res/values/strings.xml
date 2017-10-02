@@ -65,9 +65,9 @@
     <string name="pref_title_vibrate">Vibrate</string>
 
     <string-array name="play_mode_array">
-        <item>가요</item>
-        <item>금영</item>
-        <item>태진</item>
+        <item>전체</item>
+        <item>음악</item>
+        <item>노래방</item>
     </string-array>
 
 </resources>

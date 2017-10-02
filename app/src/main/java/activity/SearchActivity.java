@@ -208,7 +208,8 @@ public class SearchActivity extends BaseActivity
 
         boolean bExistsVideoID = false;
 
-        if (Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
+        if (Constants.PLAY_MODE_ALL.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ||
+                Constants.PLAY_MODE_MUSIC.equals(application.getMetaInfoString(Constants.PREF_PLAY_MODE)) ) {
             if ( !Util.isEmptyForKey(item, "videoID2") ) bExistsVideoID = true;
         } else {
             if ( !Util.isEmptyForKey(item, "videoID1") ) bExistsVideoID = true;
